@@ -11,8 +11,15 @@ import { jsPDF } from 'jspdf';
 function RegistrationSuccessContent() {
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('id');
+  const paymentIdParam = searchParams.get('paymentId');
   const [registration, setRegistration] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const paymentId =
+    registration?.paymentId ||
+    registration?.razorpayPaymentId ||
+    registration?.razorpay_payment_id ||
+    paymentIdParam ||
+    null;
 
   useEffect(() => {
     if (registrationId) {
@@ -135,10 +142,13 @@ function RegistrationSuccessContent() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
 
+    const paymentId =
+      registration.paymentId || registration.razorpayPaymentId || registration.razorpay_payment_id;
     const paymentDetails = [
-      ['Registration Fee:', '₹500'],
-      ['Payment Status:', registration.paymentStatus.toUpperCase()],
-      ['Payment ID:', registration.razorpayPaymentId || 'N/A'],
+      ['Registration Fee:', 'INR 500'],
+      ['Payment Status:', registration.paymentStatus?.toUpperCase() || 'PAID'],
+      ['Payment ID:', paymentId || 'N/A'],
+      // ['Order ID:', registration.orderId || registration.razorpay_order_id || 'N/A'],
     ];
 
     paymentDetails.forEach(([label, value]) => {
@@ -255,6 +265,12 @@ function RegistrationSuccessContent() {
                 <div className="flex justify-between">
                   <span className="text-zinc-600">Contact:</span>
                   <span className="font-semibold">{registration.parentMobile}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-600">Payment ID:</span>
+                  <span className="font-semibold">
+                    {paymentId || 'Processing...'}
+                  </span>
                 </div>
               </div>
             </div>
