@@ -117,26 +117,26 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
+    <div className="min-h-screen bg-gradient-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] py-6 sm:py-8 md:py-12 text-[#1d243c]">
       <div className="container mx-auto px-4 max-w-3xl">
-        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4 sm:mb-6 min-h-[44px] -ml-2 pl-2">
+        <Link href="/" className="inline-flex items-center text-[#333b62] hover:text-[#272d4e] mb-4 sm:mb-6 min-h-[44px] -ml-2 pl-2 font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Link>
 
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 md:p-12">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl shadow-[#333b62]/10 border border-[#e2e6f5] p-6 sm:p-8 md:p-12">
           <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 leading-tight" style={{ color: '#212529' }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 leading-tight" style={{ color: '#333b62' }}>
               Register for BTTH 2.0
             </h1>
-            <p className="text-sm sm:text-base text-zinc-600">
+            <p className="text-sm sm:text-base text-[#4b5575]">
               Fill in your details to register for the scholarship exam
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="studentName" className="text-sm sm:text-base">Student Name *</Label>
+              <Label htmlFor="studentName" className="text-sm sm:text-base text-[#1d243c]">Student Name *</Label>
               <Input
                 id="studentName"
                 {...register('studentName')}
@@ -149,9 +149,9 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currentClass" className="text-sm sm:text-base">Current Class *</Label>
+              <Label htmlFor="currentClass" className="text-sm sm:text-base text-[#1d243c]">Current Class *</Label>
               <Select onValueChange={(value) => setValue('currentClass', value as any)}>
-                <SelectTrigger className={cn("w-full", errors.currentClass ? 'border-red-500' : '')}>
+                <SelectTrigger className={cn("w-full border-[#d9def2] focus:ring-1 focus:ring-[#333b62]", errors.currentClass ? 'border-red-500' : '')}>
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
@@ -166,7 +166,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="schoolName" className="text-sm sm:text-base">School Name *</Label>
+              <Label htmlFor="schoolName" className="text-sm sm:text-base text-[#1d243c]">School Name *</Label>
               <Input
                 id="schoolName"
                 {...register('schoolName')}
@@ -179,7 +179,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="parentMobile" className="text-sm sm:text-base">Parent's Mobile Number *</Label>
+              <Label htmlFor="parentMobile" className="text-sm sm:text-base text-[#1d243c]">Parent's Mobile Number *</Label>
               <Input
                 id="parentMobile"
                 {...register('parentMobile')}
@@ -193,7 +193,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm sm:text-base">Preferred Exam Date *</Label>
+              <Label className="text-sm sm:text-base text-[#1d243c]">Preferred Exam Date *</Label>
               <RadioGroup
                 onValueChange={(value) => setValue('examDate', value as any)}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-3"
@@ -203,12 +203,12 @@ export default function RegisterPage() {
                   <Label
                     htmlFor="date1"
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-zinc-200 bg-white p-4 hover:bg-blue-50 peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 cursor-pointer transition-all min-h-[80px]",
+                      "flex flex-col items-center justify-center rounded-lg border-2 border-[#e1e4f3] bg-white p-4 hover:bg-[#f5f6fb] peer-data-[state=checked]:border-[#333b62] peer-data-[state=checked]:bg-[#f0f2fb] cursor-pointer transition-all min-h-[80px]",
                       errors.examDate && "border-red-300"
                     )}
                   >
-                    <span className="text-base sm:text-lg font-semibold text-zinc-900">11th January 2026</span>
-                    <span className="text-xs sm:text-sm text-zinc-500 mt-1">Saturday</span>
+                    <span className="text-base sm:text-lg font-semibold text-[#1d243c]">11th January 2026</span>
+                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
                   </Label>
                 </div>
                 <div className="relative">
@@ -216,12 +216,12 @@ export default function RegisterPage() {
                   <Label
                     htmlFor="date2"
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-zinc-200 bg-white p-4 hover:bg-blue-50 peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 cursor-pointer transition-all min-h-[80px]",
+                      "flex flex-col items-center justify-center rounded-lg border-2 border-[#e1e4f3] bg-white p-4 hover:bg-[#f5f6fb] peer-data-[state=checked]:border-[#333b62] peer-data-[state=checked]:bg-[#f0f2fb] cursor-pointer transition-all min-h-[80px]",
                       errors.examDate && "border-red-300"
                     )}
                   >
-                    <span className="text-base sm:text-lg font-semibold text-zinc-900">18th January 2026</span>
-                    <span className="text-xs sm:text-sm text-zinc-500 mt-1">Saturday</span>
+                    <span className="text-base sm:text-lg font-semibold text-[#1d243c]">18th January 2026</span>
+                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
                   </Label>
                 </div>
               </RadioGroup>
@@ -231,14 +231,14 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="referralSource" className="text-sm sm:text-base">How did you hear about BTTH? *</Label>
+              <Label htmlFor="referralSource" className="text-sm sm:text-base text-[#1d243c]">How did you hear about BTTH? *</Label>
               <Select
                 onValueChange={(value) => {
                   setValue('referralSource', value);
                   setShowOtherInput(value === 'Other');
                 }}
               >
-                <SelectTrigger className={cn("w-full", errors.referralSource ? 'border-red-500' : '')}>
+                <SelectTrigger className={cn("w-full border-[#d9def2] focus:ring-1 focus:ring-[#333b62]", errors.referralSource ? 'border-red-500' : '')}>
                   <SelectValue placeholder="Select an option" />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,21 +261,21 @@ export default function RegisterPage() {
 
             {showOtherInput && (
               <div className="space-y-2">
-                <Label htmlFor="referralOther" className="text-sm sm:text-base">Please specify</Label>
+                <Label htmlFor="referralOther" className="text-sm sm:text-base text-[#1d243c]">Please specify</Label>
                 <Input
                   id="referralOther"
-                  className="h-11 sm:h-10 text-base"
+                  className="h-11 sm:h-10 text-base border-[#d9def2] focus-visible:ring-[#333b62]"
                   {...register('referralOther')}
                   placeholder="Please specify how you heard about us"
                 />
               </div>
             )}
 
-            <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
-              <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#212529' }}>
+            <div className="bg-[#fef9ec] border border-[#fbe0a7] p-4 sm:p-6 rounded-lg">
+              <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#1d243c' }}>
                 Registration Fee: ₹500
               </h3>
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-[#4b5575]">
                 This fee covers exam materials, evaluation, and detailed performance report.
               </p>
             </div>
@@ -284,7 +284,7 @@ export default function RegisterPage() {
               type="submit"
               size="lg"
               className="w-full text-base sm:text-lg min-h-[48px] sm:min-h-[52px]"
-              style={{ backgroundColor: '#4F46E5' }}
+              style={{ backgroundColor: '#333b62' }}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -297,7 +297,7 @@ export default function RegisterPage() {
               )}
             </Button>
 
-            <p className="text-xs sm:text-sm text-center text-zinc-500">
+            <p className="text-xs sm:text-sm text-center text-[#6c7394]">
               By registering, you agree to our terms and conditions. Your data will be securely stored.
             </p>
           </form>

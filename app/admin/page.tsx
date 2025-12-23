@@ -14,7 +14,7 @@ import {
   ColumnFiltersState,
   ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Download, RefreshCcw, Search } from 'lucide-react';
+import { ArrowUpDown, Download, Eye, RefreshCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,10 +27,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import axiosInstance from '@/lib/axios';
+import { downloadRegistrationReceipt } from '@/lib/registration-receipt';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const CACHE_TTL_MS = 60 * 1000;
 
 type Registration = {
+  _id: string;
   studentName: string;
   currentClass: string;
   schoolName: string;
@@ -40,6 +49,11 @@ type Registration = {
   status: string;
   paymentStatus: string;
   createdAt: string;
+  paymentId?: string;
+  razorpayPaymentId?: string;
+  razorpay_payment_id?: string;
+  orderId?: string;
+  razorpay_order_id?: string;
 };
 
 type CacheEntry = {
@@ -58,6 +72,8 @@ export default function AdminPage() {
   const [classFilter, setClassFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [previewRegistration, setPreviewRegistration] = useState<Registration | null>(null);
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const cacheRef = useRef<Map<string, CacheEntry>>(new Map());
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -129,6 +145,30 @@ export default function AdminPage() {
     fetchRegistrations(false);
   };
 
+  const handleViewReceipt = (registration: Registration) => {
+    setPreviewRegistration(registration);
+    setIsReceiptDialogOpen(true);
+  };
+
+  const handleDeleteDraft = async (registration: Registration) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this draft registration? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await axiosInstance.delete(`/registrations/${registration._id}`);
+      cacheRef.current.clear();
+      fetchRegistrations(false);
+    } catch (error) {
+      console.error('Failed to delete draft:', error);
+      alert('Failed to delete draft. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns: ColumnDef<Registration>[] = [
     {
       accessorKey: 'studentName',
@@ -145,6 +185,18 @@ export default function AdminPage() {
       },
     },
     {
+      accessorKey: 'createdAt',
+      header: 'Registered On',
+      cell: ({ row }: any) => {
+        const date = new Date(row.getValue('createdAt'));
+        return date.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
+      },
+    },
+    {
       accessorKey: 'currentClass',
       header: 'Class',
       cell: ({ row }: any) => `Class ${row.getValue('currentClass')}`,
@@ -156,6 +208,14 @@ export default function AdminPage() {
     {
       accessorKey: 'parentMobile',
       header: 'Contact',
+      cell: ({ row }: any) => {
+        const mobile = row.getValue('parentMobile');
+        return (
+          <a href={`tel:${mobile}`} className="font-semibold hover:underline">
+            {mobile}
+          </a>
+        );
+      },
     },
     {
       accessorKey: 'examDate',
@@ -208,15 +268,44 @@ export default function AdminPage() {
       },
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Registered On',
-      cell: ({ row }: any) => {
-        const date = new Date(row.getValue('createdAt'));
-        return date.toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        });
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const registration = row.original;
+        const isPaid = registration.paymentStatus === 'paid';
+
+        if (!isPaid) {
+          if (registration.status === 'draft') {
+            return (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteDraft(registration)}
+              >
+                Delete Draft
+              </Button>
+            );
+          }
+
+          return <span className="text-xs text-zinc-500">Available after payment</span>;
+        }
+
+        return (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleViewReceipt(registration)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadRegistrationReceipt(registration)}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Receipt
+            </Button>
+          </div>
+        );
       },
     },
   ];
@@ -427,6 +516,88 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Registration Receipt Preview</DialogTitle>
+            <DialogDescription>
+              Review the key details before downloading or printing the official receipt.
+            </DialogDescription>
+          </DialogHeader>
+          {previewRegistration ? (
+            <div className="space-y-6">
+              <div>
+                <p className="text-sm text-zinc-500">Registration ID</p>
+                <p className="font-semibold">{previewRegistration._id}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-zinc-500">Student Name</p>
+                  <p className="font-semibold">{previewRegistration.studentName}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Class</p>
+                  <p className="font-semibold">Class {previewRegistration.currentClass}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">School</p>
+                  <p className="font-semibold">{previewRegistration.schoolName}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Parent Contact</p>
+                  <p className="font-semibold">{previewRegistration.parentMobile}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Exam Date</p>
+                  <p className="font-semibold">
+                    {new Date(previewRegistration.examDate).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Referral Source</p>
+                  <p className="font-semibold">{previewRegistration.referralSource}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Payment Status</p>
+                  <p className="font-semibold text-green-600">
+                    {previewRegistration.paymentStatus?.toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Payment ID</p>
+                  <p className="font-semibold">
+                    {previewRegistration.paymentId ||
+                      previewRegistration.razorpayPaymentId ||
+                      previewRegistration.razorpay_payment_id ||
+                      'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => {
+                    if (previewRegistration) {
+                      downloadRegistrationReceipt(previewRegistration);
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+                <Button variant="outline" onClick={() => setIsReceiptDialogOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500">Select a registration to preview the receipt.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
