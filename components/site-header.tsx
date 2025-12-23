@@ -15,12 +15,12 @@ import {
 } from '@/components/ui/drawer'
 
 const navLinks = [
-  { label: 'Overview', href: '#overview' },
-  { label: 'About BTTH', href: '#about' },
-  { label: 'Why BTTH 2.0', href: '#why-btth' },
-  { label: 'Eligibility', href: '#eligibility' },
-  { label: 'Exam Details', href: '#exam-details' },
-  { label: 'Testimonials', href: '#testimonials' },
+  { label: 'Overview', href: '/#overview' },
+  { label: 'About BTTH', href: '/#about' },
+  { label: 'Why BTTH 2.0', href: '/#why-btth' },
+  { label: 'Eligibility', href: '/#eligibility' },
+  { label: 'Exam Details', href: '/#exam-details' },
+  { label: 'Testimonials', href: '/#testimonials' },
 ]
 
 export function SiteHeader() {
@@ -48,7 +48,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="#register">
+          <Link href="/register">
             <Button size="sm" className="bg-[#333b62] hover:bg-[#272d4e] text-white">
               Register Now
             </Button>
