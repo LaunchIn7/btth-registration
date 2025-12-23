@@ -53,9 +53,16 @@ function RankBadge({
   );
 }
 
-export function TestimonialsCarousel() {
+type TestimonialsCarouselProps = {
+  sectionId?: string
+}
+
+export function TestimonialsCarousel({ sectionId = "testimonials" }: TestimonialsCarouselProps) {
   return (
-    <section className="bg-linear-to-b from-[#f5f6fb] via-[#eff1fb] to-white py-12 sm:py-16 md:py-20">
+    <section
+      id={sectionId}
+      className="bg-linear-to-b from-[#f5f6fb] via-[#eff1fb] to-white py-12 sm:py-16 md:py-20"
+    >
       <div className="container mx-auto px-4">
         <div className="flex flex-col gap-3 text-center md:text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#6c7394]">

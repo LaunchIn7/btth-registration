@@ -11,8 +11,8 @@ const accent = '#f2a900';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f5f6fb] via-[#edf0fb] to-[#dfe3fb] text-[#1d243c]">
-      <section className="container mx-auto px-4 py-8 sm:py-12 md:py-16 lg:py-24">
+    <div className="min-h-screen bg-linear-to-b from-[#f5f6fb] via-[#edf0fb] to-[#dfe3fb] text-[#1d243c]">
+      <section id="overview" className="container mx-auto px-4 py-8 sm:py-12 md:py-16 lg:py-24">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
           <div className="space-y-6 sm:space-y-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ color: brandPrimary }}>
@@ -30,6 +30,7 @@ export default function Home() {
                   Register for BTTH 2.0
                 </Button>
               </Link>
+              <Link href="#testimonials" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
@@ -37,6 +38,7 @@ export default function Home() {
               >
                 Watch Topper Stories
               </Button>
+              </Link>
             </div>
             <p className="text-sm text-[#6c7394]">
               Limited seats per exam date. No obligation to take admission after the exam – your performance report is yours to keep.
@@ -56,7 +58,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-[#333b62] via-[#2b3152] to-[#1f253f] py-12 sm:py-16 md:py-20 text-white">
+      <section id="about" className="bg-linear-to-r from-[#333b62] via-[#2b3152] to-[#1f253f] py-12 sm:py-16 md:py-20 text-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             What is Bakliwal Tutorials Talent Hunt (BTTH 2.0)?
@@ -83,7 +85,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-12 sm:py-16 md:py-20">
+      <section id="why-btth" className="container mx-auto px-4 py-12 sm:py-16 md:py-20">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-10 md:mb-12 leading-tight" style={{ color: brandPrimary }}>
           Why Your Child Should Take BTTH 2.0
         </h2>
@@ -114,7 +116,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-[#272d4e] via-[#202645] to-[#181d37] py-12 sm:py-16 md:py-20">
+      <section id="eligibility" className="bg-linear-to-r from-[#272d4e] via-[#202645] to-[#181d37] py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-8 sm:mb-10 md:mb-12 leading-tight">
             Eligibility – Who Should Register for BTTH 2.0?
@@ -147,7 +149,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-12 sm:py-16 md:py-20">
+      <section id="exam-details" className="container mx-auto px-4 py-12 sm:py-16 md:py-20">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-10 md:mb-12 leading-tight" style={{ color: '#1d243c' }}>
           BTTH 2.0 Exam Details
         </h2>
@@ -186,7 +188,7 @@ export default function Home() {
 
       <TestimonialsCarousel />
 
-      <section className="bg-[#11162a] py-12 sm:py-16 md:py-20">
+      <section id="register" className="bg-[#11162a] py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-6 sm:mb-8 leading-tight">
             Ready to Begin Your Journey?
