@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Award, BookOpen, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { TestimonialsCarousel } from "@/components/testimonials-carousel";
 
 const brandPrimary = '#333b62';
 const brandDark = '#272d4e';
@@ -182,6 +183,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <TestimonialsCarousel />
 
       <section className="bg-[#11162a] py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4 text-center">
