@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import {
@@ -12,8 +12,9 @@ import {
   useReactTable,
   SortingState,
   ColumnFiltersState,
+  ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Download, Search } from 'lucide-react';
+import { ArrowUpDown, Download, RefreshCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,10 +28,29 @@ import {
 } from '@/components/ui/table';
 import axiosInstance from '@/lib/axios';
 
+const CACHE_TTL_MS = 60 * 1000;
+
+type Registration = {
+  studentName: string;
+  currentClass: string;
+  schoolName: string;
+  parentMobile: string;
+  examDate: string;
+  referralSource: string;
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+};
+
+type CacheEntry = {
+  data: Registration[];
+  expiry: number;
+};
+
 export default function AdminPage() {
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
-  const [registrations, setRegistrations] = useState([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -38,6 +58,8 @@ export default function AdminPage() {
   const [classFilter, setClassFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const cacheRef = useRef<Map<string, CacheEntry>>(new Map());
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -46,22 +68,55 @@ export default function AdminPage() {
   }, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
-    if (isSignedIn) {
-      fetchRegistrations();
+    if (!isSignedIn) return;
+
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
     }
+
+    fetchTimeoutRef.current = setTimeout(() => {
+      fetchRegistrations();
+    }, 500);
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [isSignedIn, classFilter, dateFilter, statusFilter, globalFilter]);
 
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = async (useCache = true) => {
     try {
-      setLoading(true);
       const params = new URLSearchParams();
-      if (classFilter) params.append('class', classFilter);
-      if (dateFilter) params.append('examDate', dateFilter);
-      if (statusFilter) params.append('status', statusFilter);
+      const shouldApplyFilter = (value: string) => value && value !== 'all';
+
+      if (shouldApplyFilter(classFilter)) params.append('class', classFilter);
+      if (shouldApplyFilter(dateFilter)) params.append('examDate', dateFilter);
+      if (shouldApplyFilter(statusFilter)) params.append('status', statusFilter);
       if (globalFilter) params.append('search', globalFilter);
 
+      const cacheKey = params.toString() || '__all__';
+      const cached = useCache ? cacheRef.current.get(cacheKey) : undefined;
+      const now = Date.now();
+
+      if (cached && cached.expiry > now) {
+        setRegistrations(cached.data);
+        setLoading(false);
+        return;
+      }
+
+      if (!useCache) {
+        cacheRef.current.delete(cacheKey);
+      }
+
+      setLoading(true);
       const response = await axiosInstance.get(`/registrations/list?${params.toString()}`);
-      setRegistrations(response.data.data);
+      const registrationsData = response.data.data as Registration[];
+      setRegistrations(registrationsData);
+      cacheRef.current.set(cacheKey, {
+        data: registrationsData,
+        expiry: now + CACHE_TTL_MS,
+      });
     } catch (error) {
       console.error('Failed to fetch registrations:', error);
     } finally {
@@ -69,7 +124,12 @@ export default function AdminPage() {
     }
   };
 
-  const columns = [
+  const handleManualRefresh = () => {
+    cacheRef.current.clear();
+    fetchRegistrations(false);
+  };
+
+  const columns: ColumnDef<Registration>[] = [
     {
       accessorKey: 'studentName',
       header: ({ column }: any) => {
@@ -247,8 +307,6 @@ export default function AdminPage() {
                 <SelectItem value="8">Class 8</SelectItem>
                 <SelectItem value="9">Class 9</SelectItem>
                 <SelectItem value="10">Class 10</SelectItem>
-                <SelectItem value="11">Class 11</SelectItem>
-                <SelectItem value="12">Class 12</SelectItem>
               </SelectContent>
             </Select>
 
@@ -277,6 +335,16 @@ export default function AdminPage() {
             <Button onClick={exportToCSV} variant="outline" className="w-full md:w-auto min-h-[44px]">
               <Download className="mr-2 h-4 w-4" />
               Export CSV
+            </Button>
+
+            <Button
+              onClick={handleManualRefresh}
+              variant="secondary"
+              className="w-full md:w-auto min-h-[44px]"
+              disabled={loading}
+            >
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Refresh
             </Button>
           </div>
 
