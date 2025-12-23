@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Download, Home } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import axiosInstance from '@/lib/axios';
 import { jsPDF } from 'jspdf';
 
-export default function RegistrationSuccessPage() {
+function RegistrationSuccessContent() {
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('id');
   const [registration, setRegistration] = useState<any>(null);
@@ -289,5 +289,19 @@ export default function RegistrationSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegistrationSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      }
+    >
+      <RegistrationSuccessContent />
+    </Suspense>
   );
 }
