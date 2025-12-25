@@ -15,9 +15,14 @@ export default function Home() {
       <section id="overview" className="container mx-auto px-4 py-8 sm:py-12 md:py-16 lg:py-24">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
           <div className="space-y-6 sm:space-y-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ color: brandPrimary }}>
-              BTTH 2.0 – Talent Hunt & Scholarship Exam for Future JEE Toppers
-            </h1>
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ color: brandPrimary }}>
+                BTTH 2.0
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-[#6c7394] font-medium">
+                – Talent Hunt & Scholarship Exam for Future JEE Toppers
+              </p>
+            </div>
             <p className="text-base sm:text-lg md:text-xl text-[#4b5575] leading-relaxed">
               A merit-based talent exam by Bakliwal Tutorials Navi Mumbai to identify serious students from Classes 8-12 and support them with scholarships, guidance and a focused study plan.
             </p>
