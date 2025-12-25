@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -37,7 +37,7 @@ declare global {
   }
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -336,5 +336,19 @@ export default function RegisterPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] text-[#1d243c]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#333b62]" />
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }
