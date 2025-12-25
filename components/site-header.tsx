@@ -31,15 +31,15 @@ export function SiteHeader() {
           <Image
             src="/bt-logo.png"
             alt="Bakliwal Tutorials logo"
-            width={40}
+            width={80}
             height={40}
-            className="h-10 w-10 rounded-lg object-contain ring-1 ring-[#dfe3fb]"
+            className="h-20 w-40 rounded-lg object-contain ring-[#dfe3fb]"
             priority
           />
-          <div className="leading-tight">
+          {/* <div className="leading-tight">
             <p className="text-[11px] uppercase tracking-[0.35em] text-[#969cc0]">BTTH 2.0</p>
             <p className="text-base font-semibold text-[#333b62]">Bakliwal Tutorials</p>
-          </div>
+          </div> */}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#4b5575]">
