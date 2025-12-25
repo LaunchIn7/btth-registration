@@ -11,15 +11,8 @@ import { downloadRegistrationReceipt } from '@/lib/registration-receipt';
 function RegistrationSuccessContent() {
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('id');
-  const paymentIdParam = searchParams.get('paymentId');
   const [registration, setRegistration] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const paymentId =
-    registration?.paymentId ||
-    registration?.razorpayPaymentId ||
-    registration?.razorpay_payment_id ||
-    paymentIdParam ||
-    null;
 
   useEffect(() => {
     if (registrationId) {
@@ -52,7 +45,7 @@ function RegistrationSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
+    <div className="min-h-screen bg-linear-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 text-center">
           <div className="mb-4 sm:mb-6">
@@ -64,7 +57,7 @@ function RegistrationSuccessContent() {
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-600 mb-6 sm:mb-8">
-            Thank you for registering for BTTH 2.0. Your payment has been confirmed.
+            Thank you for registering for BTTH 2.0. Your registration is confirmed and we look forward to seeing you at the exam.
           </p>
 
           {registration && (
@@ -99,11 +92,20 @@ function RegistrationSuccessContent() {
                   <span className="text-zinc-600">Contact:</span>
                   <span className="font-semibold">{registration.parentMobile}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-600">Payment ID:</span>
-                  <span className="font-semibold">
-                    {paymentId || 'Processing...'}
-                  </span>
+              </div>
+              <div className="mt-4 border-t border-blue-100 pt-4 space-y-2 text-sm sm:text-base">
+                <p className="font-semibold text-[#212529]">Fee Breakdown</p>
+                <div className="flex justify-between text-[#212529]">
+                  <span>Standard Fee</span>
+                  <span>₹500</span>
+                </div>
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>Limited-time Discount</span>
+                  <span>-₹500</span>
+                </div>
+                <div className="flex justify-between font-semibold text-[#212529]">
+                  <span>Amount Payable</span>
+                  <span>₹0</span>
                 </div>
               </div>
             </div>

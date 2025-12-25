@@ -60,6 +60,8 @@ export default function RegisterPage() {
       const draftResponse = await axiosInstance.post('/registrations/draft', data);
       const registrationId = draftResponse.data.registrationId;
 
+      // Payment temporarily disabled — keeping the Razorpay flow for quick reactivation later.
+      /*
       const orderResponse = await axiosInstance.post('/payment/create-order', {
         registrationId,
         amount: 50000,
@@ -109,6 +111,9 @@ export default function RegisterPage() {
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
+      */
+
+      router.push(`/registration-success?id=${registrationId}`);
     } catch (error) {
       console.error('Registration error:', error);
       alert('Registration failed. Please try again.');
@@ -271,12 +276,26 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="bg-[#fef9ec] border border-[#fbe0a7] p-4 sm:p-6 rounded-lg">
-              <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#1d243c' }}>
-                Registration Fee: ₹500
+            <div className="bg-[#fef9ec] border border-[#fbe0a7] p-4 sm:p-6 rounded-lg space-y-3">
+              <h3 className="text-base sm:text-lg font-semibold" style={{ color: '#1d243c' }}>
+                Registration Fee Details
               </h3>
+              <div className="space-y-1 text-sm sm:text-base">
+                <div className="flex justify-between text-[#1d243c]">
+                  <span>Standard Fee</span>
+                  <span>₹500</span>
+                </div>
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>Limited-time Discount</span>
+                  <span>-₹500</span>
+                </div>
+                <div className="flex justify-between font-semibold text-[#1d243c]">
+                  <span>Amount Payable</span>
+                  <span>₹0</span>
+                </div>
+              </div>
               <p className="text-sm text-[#4b5575]">
-                This fee covers exam materials, evaluation, and detailed performance report.
+                Offer covers exam materials, evaluation, and a detailed performance report.
               </p>
             </div>
 
@@ -290,10 +309,10 @@ export default function RegisterPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
+                  Submitting...
                 </>
               ) : (
-                'Proceed to Payment'
+                  'Complete Registration'
               )}
             </Button>
 
@@ -304,7 +323,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
     </div>
   );
 }

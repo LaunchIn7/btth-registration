@@ -9,12 +9,14 @@ export async function POST(request: NextRequest) {
     const db = client.db('btth_registration');
     const collection = db.collection('registrations');
 
+    const now = new Date();
     const registration = {
       ...body,
-      status: 'draft',
-      paymentStatus: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      status: 'completed',
+      paymentStatus: 'waived',
+      offerTag: 'limited_time_free',
+      createdAt: now,
+      updatedAt: now,
     };
 
     const result = await collection.insertOne(registration);

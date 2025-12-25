@@ -36,7 +36,7 @@ export const downloadRegistrationReceipt = (
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPos = 20;
 
-  doc.setFillColor(33, 37, 41);
+  doc.setFillColor(51, 59, 98);
   doc.rect(0, 0, pageWidth, 40, 'F');
 
   doc.setTextColor(255, 255, 255);
@@ -65,7 +65,7 @@ export const downloadRegistrationReceipt = (
   );
   yPos += 15;
 
-  doc.setFillColor(79, 70, 229);
+  doc.setFillColor(51, 59, 98);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -94,7 +94,7 @@ export const downloadRegistrationReceipt = (
 
   yPos += 5;
 
-  doc.setFillColor(79, 70, 229);
+  doc.setFillColor(51, 59, 98);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -122,12 +122,7 @@ export const downloadRegistrationReceipt = (
 
   yPos += 5;
 
-  const resolvedPaymentId =
-    registration.paymentId ||
-    registration.razorpayPaymentId ||
-    registration.razorpay_payment_id;
-
-  doc.setFillColor(79, 70, 229);
+  doc.setFillColor(51, 59, 98);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -135,26 +130,48 @@ export const downloadRegistrationReceipt = (
   doc.text('PAYMENT DETAILS', 25, yPos + 5.5);
   yPos += 13;
 
+  const paymentBoxTop = yPos;
+  const paymentDetails = [
+    { label: 'Standard Fee', value: 'INR 500' },
+    { label: 'Limited-time Discount', value: '- INR 500', valueColor: [16, 122, 72] as [number, number, number] },
+  ];
+  const paymentBoxHeight = paymentDetails.length * 9 + 30;
+
+  doc.setDrawColor(211, 215, 234);
+  doc.setFillColor(245, 246, 251);
+  doc.roundedRect(20, paymentBoxTop, pageWidth - 40, paymentBoxHeight, 4, 4, 'FD');
+
+  yPos += 12;
+  doc.setFontSize(10);
+
+  paymentDetails.forEach(({ label, value, valueColor }) => {
+    doc.setTextColor(51, 59, 98);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, 28, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(valueColor ? valueColor[0] : 29, valueColor ? valueColor[1] : 36, valueColor ? valueColor[2] : 65);
+    doc.text(value, pageWidth - 32, yPos, { align: 'right' });
+    yPos += 9;
+    doc.setTextColor(51, 59, 98);
+  });
+
+  const separatorY = yPos + 2;
+  doc.setDrawColor(226, 232, 240);
+  doc.line(28, separatorY, pageWidth - 28, separatorY);
+  yPos = separatorY + 8;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(51, 59, 98);
+  doc.text('Amount Payable', 28, yPos);
+  doc.setFontSize(12);
+  doc.setTextColor(51, 59, 98);
+  doc.text('INR 0', pageWidth - 32, yPos, { align: 'right' });
+
+  yPos = paymentBoxTop + paymentBoxHeight + 10;
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-
-  const paymentDetails = [
-    ['Registration Fee:', 'INR 500'],
-    ['Payment Status:', registration.paymentStatus?.toUpperCase() || 'PAID'],
-    ['Payment ID:', resolvedPaymentId || 'N/A'],
-    ['Order ID:', registration.orderId || registration.razorpay_order_id || 'N/A'],
-  ];
-
-  paymentDetails.forEach(([label, value]) => {
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, 25, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(value, 70, yPos);
-    yPos += 7;
-  });
-
-  yPos += 10;
 
   doc.setFillColor(254, 243, 199);
   doc.rect(20, yPos, pageWidth - 40, 45, 'F');
