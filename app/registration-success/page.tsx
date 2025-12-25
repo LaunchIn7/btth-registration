@@ -79,13 +79,14 @@ function RegistrationSuccessContent() {
                   <span className="font-semibold">Class {registration.currentClass}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-600">Exam Date:</span>
+                  <span className="text-zinc-600">Exam Date & Time:</span>
                   <span className="font-semibold">
                     {new Date(registration.examDate).toLocaleDateString('en-IN', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
-                    })}
+                    })}{' '}
+                    · 12:00 PM
                   </span>
                 </div>
                 <div className="flex justify-between">

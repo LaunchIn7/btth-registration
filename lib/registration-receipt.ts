@@ -108,6 +108,7 @@ export const downloadRegistrationReceipt = (
 
   const examDetails = [
     ['Exam Date:', formatExamDate(registration.examDate)],
+    ['Exam Time:', '12:00 PM'],
     ['Venue:', 'Bakliwal Tutorials Navi Mumbai Centre'],
     ['Reporting Time:', '30 minutes before exam time'],
   ];

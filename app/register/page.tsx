@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import axiosInstance from '@/lib/axios';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,7 @@ declare global {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
 
@@ -53,6 +54,14 @@ export default function RegisterPage() {
   });
 
   const referralSource = watch('referralSource');
+  const selectedExamDate = watch('examDate');
+
+  useEffect(() => {
+    const examDateParam = searchParams.get('examDate');
+    if (examDateParam && ['2026-01-11', '2026-01-18'].includes(examDateParam)) {
+      setValue('examDate', examDateParam as '2026-01-11' | '2026-01-18');
+    }
+  }, [searchParams, setValue]);
 
   const onSubmit = async (data: RegistrationFormData) => {
     setIsSubmitting(true);
@@ -200,6 +209,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label className="text-sm sm:text-base text-[#1d243c]">Preferred Exam Date *</Label>
               <RadioGroup
+                value={selectedExamDate}
                 onValueChange={(value) => setValue('examDate', value as any)}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               >
@@ -214,6 +224,7 @@ export default function RegisterPage() {
                   >
                     <span className="text-base sm:text-lg font-semibold text-[#1d243c]">11th January 2026</span>
                     <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
+                    <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
                   </Label>
                 </div>
                 <div className="relative">
@@ -227,6 +238,7 @@ export default function RegisterPage() {
                   >
                     <span className="text-base sm:text-lg font-semibold text-[#1d243c]">18th January 2026</span>
                     <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
+                    <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
                   </Label>
                 </div>
               </RadioGroup>
