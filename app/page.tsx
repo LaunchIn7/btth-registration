@@ -22,7 +22,7 @@ export default function Home() {
                 BTTH 2.0
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-[#6c7394] font-medium">
-                – Talent Hunt & Scholarship Exam for Future JEE Toppers
+                Talent Hunt & Scholarship Exam for Future JEE Toppers
               </p>
             </div>
             <p className="text-base sm:text-lg md:text-xl text-[#4b5575] leading-relaxed">
