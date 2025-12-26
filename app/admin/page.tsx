@@ -13,7 +13,7 @@ import {
   ColumnFiltersState,
   ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Download, Eye, RefreshCcw, Search } from 'lucide-react';
+import { ArrowUpDown, Download, Eye, FileSpreadsheet, RefreshCcw, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,6 +34,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import * as XLSX from 'xlsx';
 
 const CACHE_TTL_MS = 60 * 1000;
 
@@ -73,6 +84,10 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [previewRegistration, setPreviewRegistration] = useState<Registration | null>(null);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{ type: 'single' | 'bulk'; registration?: Registration } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const cacheRef = useRef<Map<string, CacheEntry>>(new Map());
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -99,6 +114,10 @@ export default function AdminPage() {
       }
     };
   }, [isSignedIn, classFilter, dateFilter, statusFilter, globalFilter]);
+
+  useEffect(() => {
+    setSelectedRowIds((prev) => prev.filter((id) => registrations.some((reg) => reg._id === id)));
+  }, [registrations]);
 
   const fetchRegistrations = async (useCache = true) => {
     try {
@@ -149,26 +168,109 @@ export default function AdminPage() {
     setIsReceiptDialogOpen(true);
   };
 
-  const handleDeleteDraft = async (registration: Registration) => {
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this draft registration? This action cannot be undone.'
-    );
-    if (!confirmed) return;
+  const handleDeleteRegistration = (registration: Registration) => {
+    setPendingDelete({ type: 'single', registration });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
 
     try {
       setLoading(true);
-      await axiosInstance.delete(`/registrations/${registration._id}`);
+      setErrorMessage(null);
+
+      if (pendingDelete.type === 'single' && pendingDelete.registration) {
+        await axiosInstance.delete(`/registrations/${pendingDelete.registration._id}`);
+        setSelectedRowIds((prev) => prev.filter((id) => id !== pendingDelete.registration!._id));
+      } else if (pendingDelete.type === 'bulk') {
+        const selectedRegistrations = registrations.filter((reg) => selectedRowIds.includes(reg._id));
+        await Promise.all(
+          selectedRegistrations.map((registration) =>
+            axiosInstance.delete(`/registrations/${registration._id}`)
+          )
+        );
+        setSelectedRowIds([]);
+      }
+
       cacheRef.current.clear();
       fetchRegistrations(false);
+      setDeleteDialogOpen(false);
+      setPendingDelete(null);
     } catch (error) {
-      console.error('Failed to delete draft:', error);
-      alert('Failed to delete draft. Please try again.');
+      console.error('Failed to delete registration(s):', error);
+      setErrorMessage('Failed to delete. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleBulkDelete = () => {
+    const selectedRegistrations = registrations.filter((reg) => selectedRowIds.includes(reg._id));
+    if (!selectedRegistrations.length) return;
+
+    setPendingDelete({ type: 'bulk' });
+    setDeleteDialogOpen(true);
+  };
+
+  const toggleRowSelection = (id: string, checked: boolean) => {
+    setSelectedRowIds((prev) => {
+      if (checked) {
+        if (prev.includes(id)) return prev;
+        return [...prev, id];
+      }
+      return prev.filter((rowId) => rowId !== id);
+    });
+  };
+
+  const checkboxClass = 'h-4 w-4 rounded border border-zinc-300 accent-blue-600';
+  const selectedCount = selectedRowIds.length;
+
   const columns: ColumnDef<Registration>[] = [
+    {
+      id: 'select',
+      header: ({ table }) => {
+        const visibleRowIds = table.getRowModel().rows.map((row) => row.original._id);
+        const allVisibleSelected =
+          visibleRowIds.length > 0 && visibleRowIds.every((id) => selectedRowIds.includes(id));
+        const someSelected = visibleRowIds.some((id) => selectedRowIds.includes(id));
+
+        return (
+          <input
+            type="checkbox"
+            aria-label="Select all rows"
+            className={checkboxClass}
+            checked={allVisibleSelected}
+            ref={(input) => {
+              if (input) input.indeterminate = !allVisibleSelected && someSelected;
+            }}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setSelectedRowIds((prev) => {
+                if (!checked) {
+                  return prev.filter((id) => !visibleRowIds.includes(id));
+                }
+                return Array.from(new Set([...prev, ...visibleRowIds]));
+              });
+            }}
+          />
+        );
+      },
+      cell: ({ row }) => {
+        const isChecked = selectedRowIds.includes(row.original._id);
+        return (
+          <input
+            type="checkbox"
+            aria-label={`Select ${row.original.studentName}`}
+            className={checkboxClass}
+            checked={isChecked}
+            onChange={(event) => toggleRowSelection(row.original._id, event.target.checked)}
+          />
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: 'studentName',
       header: ({ column }: any) => {
@@ -192,6 +294,9 @@ export default function AdminPage() {
           day: 'numeric',
           month: 'short',
           year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
         });
       },
     },
@@ -273,35 +378,33 @@ export default function AdminPage() {
         const registration = row.original;
         const isPaid = registration.paymentStatus === 'paid';
 
-        if (!isPaid) {
-          if (registration.status === 'draft') {
-            return (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeleteDraft(registration)}
-              >
-                Delete Draft
-              </Button>
-            );
-          }
-
-          return <span className="text-xs text-zinc-500">Available after payment</span>;
-        }
-
         return (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleViewReceipt(registration)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              // disabled={!isPaid}
+              title={isPaid ? 'Preview receipt' : 'Available after payment'}
+              onClick={() => handleViewReceipt(registration)}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
+              // disabled={!isPaid}
+              title={isPaid ? 'Download receipt' : 'Available after payment'}
               onClick={() => downloadRegistrationReceipt(registration)}
             >
-              <Download className="mr-2 h-4 w-4" />
-              Receipt
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="destructive"
+              size="icon-sm"
+              title="Delete registration"
+              onClick={() => handleDeleteRegistration(registration)}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         );
@@ -327,9 +430,10 @@ export default function AdminPage() {
   });
 
   const exportToCSV = () => {
-    const headers = ['Student Name', 'Class', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Student Name', 'Registered On', 'Class', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
       reg.studentName,
+      new Date(reg.createdAt).toLocaleString('en-IN'),
       `Class ${reg.currentClass}`,
       reg.schoolName,
       reg.parentMobile,
@@ -350,6 +454,28 @@ export default function AdminPage() {
     a.href = url;
     a.download = `btth-registrations-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+  };
+
+  const exportToExcel = () => {
+    const headers = ['Student Name', 'Registered On', 'Class', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const rows = registrations.map((reg: any) => [
+      reg.studentName,
+      new Date(reg.createdAt).toLocaleString('en-IN'),
+      `Class ${reg.currentClass}`,
+      reg.schoolName,
+      reg.parentMobile,
+      new Date(reg.examDate).toLocaleDateString('en-IN'),
+      reg.referralSource,
+      reg.status,
+      reg.paymentStatus,
+    ]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
+
+    const fileName = `btth-registrations-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   if (!isLoaded || !isSignedIn) {
@@ -425,6 +551,11 @@ export default function AdminPage() {
               Export CSV
             </Button>
 
+            <Button onClick={exportToExcel} variant="outline" className="w-full md:w-auto min-h-[44px]">
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Export Excel
+            </Button>
+
             <Button
               onClick={handleManualRefresh}
               variant="secondary"
@@ -435,6 +566,33 @@ export default function AdminPage() {
               Refresh
             </Button>
           </div>
+
+          {selectedCount > 0 && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-blue-100 bg-blue-50 text-blue-900 rounded-lg px-4 py-3 mb-4">
+              <p className="text-sm font-medium">
+                {selectedCount} registration{selectedCount > 1 ? 's' : ''} selected
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedRowIds([])}
+                  disabled={loading}
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={!selectedCount || loading}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected
+                </Button>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -597,6 +755,51 @@ export default function AdminPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingDelete?.type === 'bulk'
+                ? `Delete ${registrations.filter((reg) => selectedRowIds.includes(reg._id)).length} Registration(s)?`
+                : 'Delete Registration?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete?.type === 'bulk' ? (
+                <>
+                  You are about to delete{' '}
+                  <strong>{registrations.filter((reg) => selectedRowIds.includes(reg._id)).length} selected registration(s)</strong>.
+                  This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  You are about to delete the registration for{' '}
+                  <strong>{pendingDelete?.registration?.studentName}</strong>. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+            {errorMessage && (
+              <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteDialogOpen(false);
+              setPendingDelete(null);
+              setErrorMessage(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 focus-visible:ring-red-600"
+            >
+              {loading ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -55,7 +55,6 @@ export async function DELETE(
 
     const result = await collection.deleteOne({
       _id: new ObjectId(id),
-      status: 'draft',
     });
 
     if (result.deletedCount === 0) {
