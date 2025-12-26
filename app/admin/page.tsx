@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useClerk, useUser } from '@clerk/nextjs';
 import {
   flexRender,
   getCoreRowModel,
@@ -63,7 +62,7 @@ type CacheEntry = {
 
 export default function AdminPage() {
   const { isLoaded, isSignedIn } = useUser();
-  const router = useRouter();
+  const { redirectToSignIn } = useClerk();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -79,9 +78,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      router.push('/');
+      redirectToSignIn({ redirectUrl: '/admin' });
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, redirectToSignIn]);
 
   useEffect(() => {
     if (!isSignedIn) return;
