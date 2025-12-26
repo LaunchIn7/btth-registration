@@ -306,9 +306,6 @@ function RegisterPageContent() {
                   <span>₹0</span>
                 </div>
               </div>
-              <p className="text-sm text-[#4b5575]">
-                Offer covers exam materials, evaluation, and a detailed performance report.
-              </p>
             </div>
 
             <Button
