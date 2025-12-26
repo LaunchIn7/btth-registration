@@ -384,7 +384,8 @@ export default function AdminPage() {
               variant="outline"
               size="icon-sm"
               // disabled={!isPaid}
-              title={isPaid ? 'Preview receipt' : 'Available after payment'}
+              // title={isPaid ? 'Preview receipt' : 'Available after payment'}
+              title="Preview receipt"
               onClick={() => handleViewReceipt(registration)}
             >
               <Eye className="h-4 w-4" />
@@ -393,7 +394,8 @@ export default function AdminPage() {
               variant="outline"
               size="icon-sm"
               // disabled={!isPaid}
-              title={isPaid ? 'Download receipt' : 'Available after payment'}
+              // title={isPaid ? 'Download receipt' : 'Available after payment'}
+              title="Download receipt"
               onClick={() => downloadRegistrationReceipt(registration)}
             >
               <Download className="h-4 w-4" />
