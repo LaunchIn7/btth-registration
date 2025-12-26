@@ -29,7 +29,7 @@ export function SiteHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/bt-logo.png"
+            src="/BT_Logo.svg"
             alt="Bakliwal Tutorials logo"
             width={80}
             height={40}
