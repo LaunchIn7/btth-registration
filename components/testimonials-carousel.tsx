@@ -140,8 +140,8 @@ export function TestimonialsCarousel({ sectionId = "testimonials" }: Testimonial
                 );
               })}
             </CarouselContent>
-            <CarouselPrevious className="hidden sm:flex -left-2 md:-left-6 border-none bg-white text-[#1d243c] shadow-lg shadow-[#1d243c]/10 hover:bg-[#f5f6fb]" />
-            <CarouselNext className="hidden sm:flex -right-2 md:-right-6 border-none bg-white text-[#1d243c] shadow-lg shadow-[#1d243c]/10 hover:bg-[#f5f6fb]" />
+            <CarouselPrevious className="hidden sm:flex left-0 md:left-2 border-none bg-[#ffffffbc] text-[#1d243c] shadow-lg shadow-[#1d243c]/10 hover:bg-[#f5f6fb]" />
+            <CarouselNext className="hidden sm:flex right-0 md:right-2 border-none bg-[#ffffffbc] text-[#1d243c] shadow-lg shadow-[#1d243c]/10 hover:bg-[#f5f6fb]" />
           </Carousel>
         </div>
       </div>
