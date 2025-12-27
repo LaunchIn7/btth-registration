@@ -13,6 +13,8 @@ export type RegistrationReceiptData = {
   razorpay_payment_id?: string;
   orderId?: string;
   razorpay_order_id?: string;
+  examType?: string;
+  registrationAmount?: number;
 };
 
 const formatExamDate = (value: string) => {
@@ -132,10 +134,25 @@ export const downloadRegistrationReceipt = (
   yPos += 13;
 
   const paymentBoxTop = yPos;
-  const paymentDetails = [
-    { label: 'Standard Fee', value: 'INR 500' },
-    { label: 'Limited-time Discount', value: '- INR 500', valueColor: [16, 122, 72] as [number, number, number] },
-  ];
+  const isPaid = registration.paymentStatus === 'paid';
+  const paymentId = registration.razorpay_payment_id || registration.razorpayPaymentId || registration.paymentId;
+
+  // Use saved registration amount and exam type from database
+  const feeAmount = registration.registrationAmount || 500;
+  const isFoundation = registration.examType === 'foundation';
+  const feeLabel = isFoundation ? 'Registration Fee (Foundation)' : 'Registration Fee';
+  const standardFeeLabel = isFoundation ? 'Standard Fee (Foundation)' : 'Standard Fee';
+
+  const paymentDetails = isPaid
+    ? [
+      { label: feeLabel, value: `INR ${feeAmount}` },
+      ...(paymentId ? [{ label: 'Payment ID', value: paymentId }] : []),
+    ]
+    : [
+      { label: standardFeeLabel, value: `INR ${feeAmount}` },
+      { label: 'Limited-time Discount', value: `- INR ${feeAmount}`, valueColor: [16, 122, 72] as [number, number, number] },
+    ];
+
   const paymentBoxHeight = paymentDetails.length * 9 + 30;
 
   doc.setDrawColor(211, 215, 234);
@@ -164,10 +181,16 @@ export const downloadRegistrationReceipt = (
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(51, 59, 98);
-  doc.text('Amount Payable', 28, yPos);
-  doc.setFontSize(12);
-  doc.setTextColor(51, 59, 98);
-  doc.text('INR 0', pageWidth - 32, yPos, { align: 'right' });
+  if (isPaid) {
+    doc.text('Payment Status', 28, yPos);
+    doc.setTextColor(16, 122, 72);
+    doc.text('PAID', pageWidth - 32, yPos, { align: 'right' });
+  } else {
+    doc.text('Amount Payable', 28, yPos);
+    doc.setFontSize(12);
+    doc.setTextColor(51, 59, 98);
+    doc.text('INR 0', pageWidth - 32, yPos, { align: 'right' });
+  }
 
   yPos = paymentBoxTop + paymentBoxHeight + 10;
   doc.setTextColor(0, 0, 0);

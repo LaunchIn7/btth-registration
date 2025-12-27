@@ -61,6 +61,8 @@ export default function RootLayout({
             }}
           />
           {/* End Meta Pixel Code */}
+          {/* Razorpay Checkout Script */}
+          <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         </head>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f7f8fc] text-[#1c2238]`}>
           <SiteHeader />

@@ -11,6 +11,7 @@ import { downloadRegistrationReceipt } from '@/lib/registration-receipt';
 function RegistrationSuccessContent() {
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('id');
+  const paymentIdParam = searchParams.get('paymentId');
   const [registration, setRegistration] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ function RegistrationSuccessContent() {
   };
 
   const downloadReceipt = () => {
-    if (!registration) return;
+    if (!registration || registration.paymentStatus !== 'paid') return;
     downloadRegistrationReceipt(registration);
   };
 
@@ -57,7 +58,9 @@ function RegistrationSuccessContent() {
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-600 mb-6 sm:mb-8">
-            Thank you for registering for BTTH 2.0. Your registration is confirmed and we look forward to seeing you at the exam.
+            {registration?.paymentStatus === 'paid'
+              ? 'Thank you for your payment! Your registration for BTTH 2.0 is confirmed and we look forward to seeing you at the exam.'
+              : 'Your application details have been saved. Please complete the payment to confirm your BTTH 2.0 registration.'}
           </p>
 
           {registration && (
@@ -94,30 +97,58 @@ function RegistrationSuccessContent() {
                   <span className="font-semibold">{registration.parentMobile}</span>
                 </div>
               </div>
-              <div className="mt-4 border-t border-blue-100 pt-4 space-y-2 text-sm sm:text-base">
-                <p className="font-semibold text-[#212529]">Fee Breakdown</p>
-                <div className="flex justify-between text-[#212529]">
-                  <span>Standard Fee</span>
-                  <span>₹500</span>
-                </div>
-                <div className="flex justify-between text-green-600 font-semibold">
-                  <span>Limited-time Discount</span>
-                  <span>-₹500</span>
-                </div>
-                <div className="flex justify-between font-semibold text-[#212529]">
-                  <span>Amount Payable</span>
-                  <span>₹0</span>
-                </div>
+              <div className={`mt-4 border-t pt-4 space-y-2 text-sm sm:text-base ${registration?.paymentStatus === 'paid' ? 'border-blue-100' : 'border-red-100'}`}>
+                <p className="font-semibold text-[#212529]">Payment Details</p>
+                {registration?.paymentStatus === 'paid' ? (
+                  <>
+                    <div className="flex justify-between text-[#212529]">
+                      <span>Registration Fee{registration.examType === 'foundation' ? ' (Foundation)' : ''}</span>
+                      <span>₹{registration.registrationAmount || 500}</span>
+                    </div>
+                    {paymentIdParam && (
+                      <div className="flex justify-between text-[#212529]">
+                        <span>Payment ID</span>
+                        <span className="font-mono text-xs">{paymentIdParam}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-green-600">
+                      <span>Status</span>
+                      <span>Paid</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-[#212529]">
+                      <span>Standard Fee{registration.examType === 'foundation' ? ' (Foundation)' : ''}</span>
+                      <span>₹{registration.registrationAmount || 500}</span>
+                    </div>
+                      <div className="flex justify-between font-semibold text-red-600">
+                        <span>Status</span>
+                        <span>Payment Pending</span>
+                      </div>
+                    <p className="text-xs text-red-600">
+                      Please complete the payment to confirm your registration. If the payment window was closed, return to the registration form and try again.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}
 
           <div className="space-y-3 sm:space-y-4">
-            <div className="bg-yellow-50 rounded-lg p-3 sm:p-4">
-              <p className="text-sm text-zinc-700">
-                <strong>Important:</strong> You will receive a confirmation SMS and email with exam details shortly. Please arrive 30 minutes before the exam time.
-              </p>
-            </div>
+            {registration?.paymentStatus === 'paid' ? (
+              <div className="bg-yellow-50 rounded-lg p-3 sm:p-4">
+                <p className="text-sm text-zinc-700">
+                  <strong>Important:</strong> You will receive a confirmation SMS and email with exam details shortly. Please arrive 30 minutes before the exam time.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-red-50 rounded-lg p-3 sm:p-4">
+                <p className="text-sm text-red-700">
+                  <strong>Payment Pending:</strong> Your seat is not confirmed yet. Please complete the payment or contact support at info@bakliwaltutorials.com if the amount has been debited but the status has not updated.
+                </p>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button
@@ -125,7 +156,8 @@ function RegistrationSuccessContent() {
                 size="lg"
                 className="w-full sm:w-auto min-h-[48px]"
                 onClick={downloadReceipt}
-                disabled={!registration}
+                disabled={!registration || registration.paymentStatus !== 'paid'}
+                title={registration?.paymentStatus === 'paid' ? 'Download receipt' : 'Available after payment confirmation'}
               >
                 <Download className="mr-2 h-5 w-5" />
                 Download Receipt

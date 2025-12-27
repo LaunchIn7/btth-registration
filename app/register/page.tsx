@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 
 const registrationSchema = z.object({
   studentName: z.string().min(2, 'Name must be at least 2 characters'),
-  currentClass: z.enum(['8', '9', '10', '11', '12'], {
+  currentClass: z.enum(['7', '8', '9', '10', '11', '12'], {
     message: 'Please select a class',
   }),
   schoolName: z.string().min(2, 'School name is required'),
@@ -55,6 +55,12 @@ function RegisterPageContent() {
 
   const referralSource = watch('referralSource');
   const selectedExamDate = watch('examDate');
+  const currentClass = watch('currentClass');
+
+  // Calculate registration fee based on class
+  const registrationFee = currentClass && ['7', '8', '9'].includes(currentClass) ? 200 : 500;
+  const feeInPaise = registrationFee * 100;
+  const examType = currentClass && ['7', '8', '9'].includes(currentClass) ? 'foundation' : 'regular';
 
   useEffect(() => {
     const examDateParam = searchParams.get('examDate');
@@ -66,14 +72,16 @@ function RegisterPageContent() {
   const onSubmit = async (data: RegistrationFormData) => {
     setIsSubmitting(true);
     try {
-      const draftResponse = await axiosInstance.post('/registrations/draft', data);
+      const draftResponse = await axiosInstance.post('/registrations/draft', {
+        ...data,
+        examType,
+        registrationAmount: registrationFee,
+      });
       const registrationId = draftResponse.data.registrationId;
 
-      // Payment temporarily disabled — keeping the Razorpay flow for quick reactivation later.
-      /*
       const orderResponse = await axiosInstance.post('/payment/create-order', {
         registrationId,
-        amount: 50000,
+        amount: feeInPaise,
       });
 
       const { orderId, amount, currency } = orderResponse.data;
@@ -114,15 +122,21 @@ function RegisterPageContent() {
         modal: {
           ondismiss: function () {
             setIsSubmitting(false);
+            alert('Payment was cancelled. Please try again or contact support if you need assistance.');
+          },
+          onhidden: function () {
+            setIsSubmitting(false);
           },
         },
       };
 
       const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response: any) {
+        setIsSubmitting(false);
+        console.error('Payment failed:', response.error);
+        alert(`Payment failed: ${response.error.description || 'Unknown error'}. Please try again or contact support.`);
+      });
       razorpay.open();
-      */
-
-      router.push(`/registration-success?id=${registrationId}`);
     } catch (error) {
       console.error('Registration error:', error);
       alert('Registration failed. Please try again.');
@@ -169,9 +183,11 @@ function RegisterPageContent() {
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="8">Class 8</SelectItem>
-                  <SelectItem value="9">Class 9</SelectItem>
+                  <SelectItem value="7">Class 7 (Foundation)</SelectItem>
+                  <SelectItem value="8">Class 8 (Foundation)</SelectItem>
+                  <SelectItem value="9">Class 9 (Foundation)</SelectItem>
                   <SelectItem value="10">Class 10</SelectItem>
+                  <SelectItem value="11">Class 11</SelectItem>
                 </SelectContent>
               </Select>
               {errors.currentClass && (
@@ -288,44 +304,35 @@ function RegisterPageContent() {
               </div>
             )}
 
-            <div className="bg-[#fef9ec] border border-[#fbe0a7] p-4 sm:p-6 rounded-lg space-y-3">
-              <h3 className="text-base sm:text-lg font-semibold" style={{ color: '#1d243c' }}>
-                Registration Fee Details
+            <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
+              <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#212529' }}>
+                Registration Fee: ₹{registrationFee}
               </h3>
-              <div className="space-y-1 text-sm sm:text-base">
-                <div className="flex justify-between text-[#1d243c]">
-                  <span>Standard Fee</span>
-                  <span>₹500</span>
-                </div>
-                <div className="flex justify-between text-green-600 font-semibold">
-                  <span>Limited-time Discount</span>
-                  <span>-₹500</span>
-                </div>
-                <div className="flex justify-between font-semibold text-[#1d243c]">
-                  <span>Amount Payable</span>
-                  <span>₹0</span>
-                </div>
-              </div>
+              {currentClass && ['7', '8', '9'].includes(currentClass) && (
+                <p className="text-xs sm:text-sm text-[#4b5575] mt-1">
+                  Foundation Course Exam Fee
+                </p>
+              )}
             </div>
 
             <Button
               type="submit"
               size="lg"
               className="w-full text-base sm:text-lg min-h-[48px] sm:min-h-[52px]"
-              style={{ backgroundColor: '#333b62' }}
+              style={{ backgroundColor: '#4F46E5' }}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Submitting...
+                  Processing...
                 </>
               ) : (
-                  'Complete Registration'
+                  'Proceed to Payment'
               )}
             </Button>
 
-            <p className="text-xs sm:text-sm text-center text-[#6c7394]">
+            <p className="text-xs sm:text-sm text-center text-zinc-500">
               By registering, you agree to our terms and conditions. Your data will be securely stored.
             </p>
           </form>

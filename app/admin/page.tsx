@@ -64,6 +64,8 @@ type Registration = {
   razorpay_payment_id?: string;
   orderId?: string;
   razorpay_order_id?: string;
+  examType?: string;
+  registrationAmount?: number;
 };
 
 type CacheEntry = {
@@ -306,6 +308,31 @@ export default function AdminPage() {
       cell: ({ row }: any) => `Class ${row.getValue('currentClass')}`,
     },
     {
+      accessorKey: 'examType',
+      header: 'Exam Type',
+      cell: ({ row }: any) => {
+        const examType = row.getValue('examType');
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${examType === 'foundation'
+              ? 'bg-purple-100 text-purple-800'
+              : 'bg-blue-100 text-blue-800'
+              }`}
+          >
+            {examType === 'foundation' ? 'Foundation' : 'comp28'}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'registrationAmount',
+      header: 'Fee',
+      cell: ({ row }: any) => {
+        const amount = row.getValue('registrationAmount');
+        return <span className="font-semibold">₹{amount || 500}</span>;
+      },
+    },
+    {
       accessorKey: 'schoolName',
       header: 'School',
     },
@@ -356,13 +383,15 @@ export default function AdminPage() {
     },
     {
       accessorKey: 'paymentStatus',
-      header: 'Payment',
+      header: 'Payment Status',
       cell: ({ row }: any) => {
         const status = row.getValue('paymentStatus');
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-semibold ${status === 'paid'
               ? 'bg-green-100 text-green-800'
+              : status === 'pending'
+                ? 'bg-yellow-100 text-yellow-800'
               : 'bg-red-100 text-red-800'
               }`}
           >
