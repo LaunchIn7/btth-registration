@@ -599,28 +599,30 @@ export default function AdminPage() {
           </div>
 
           {selectedCount > 0 && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-blue-100 bg-blue-50 text-blue-900 rounded-lg px-4 py-3 mb-4">
-              <p className="text-sm font-medium">
-                {selectedCount} registration{selectedCount > 1 ? 's' : ''} selected
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedRowIds([])}
-                  disabled={loading}
-                >
-                  Clear Selection
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={!selectedCount || loading}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Selected
-                </Button>
+            <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 pointer-events-none">
+              <div className="pointer-events-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-blue-100 bg-white shadow-xl shadow-blue-300/40 text-blue-900 rounded-xl px-4 py-3 w-full max-w-3xl">
+                <p className="text-sm font-semibold">
+                  {selectedCount} registration{selectedCount > 1 ? 's' : ''} selected
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedRowIds([])}
+                    disabled={loading}
+                  >
+                    Clear Selection
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={!selectedCount || loading}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                </div>
               </div>
             </div>
           )}

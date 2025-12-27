@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       ...body,
       status: 'draft',
       paymentStatus: 'pending',
-      examType: body.examType || 'comp28',
+      examType: body.examType || 'regular',
       registrationAmount: body.registrationAmount || 500,
       createdAt: new Date(),
       updatedAt: new Date(),
