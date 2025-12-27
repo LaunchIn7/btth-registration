@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -56,11 +56,67 @@ function RegisterPageContent() {
   const referralSource = watch('referralSource');
   const selectedExamDate = watch('examDate');
   const currentClass = watch('currentClass');
+  const schoolNameValue = watch('schoolName');
 
   // Calculate registration fee based on class
   const registrationFee = currentClass && ['7', '8', '9'].includes(currentClass) ? 200 : 500;
   const feeInPaise = registrationFee * 100;
   const examType = currentClass && ['7', '8', '9'].includes(currentClass) ? 'foundation' : 'regular';
+
+  const [schoolSuggestions, setSchoolSuggestions] = useState<string[]>([]);
+  const [isSchoolLookupLoading, setIsSchoolLookupLoading] = useState(false);
+  const [isSchoolInputFocused, setIsSchoolInputFocused] = useState(false);
+  const suggestionContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionContainerRef.current &&
+        !suggestionContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsSchoolInputFocused(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!schoolNameValue || schoolNameValue.trim().length < 2) {
+      setSchoolSuggestions([]);
+      setIsSchoolLookupLoading(false);
+      return;
+    }
+
+    setIsSchoolLookupLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/schools/search?q=${encodeURIComponent(schoolNameValue.trim())}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch schools');
+        }
+        const data = await response.json();
+        setSchoolSuggestions(Array.isArray(data.results) ? data.results : []);
+      } catch (error) {
+        if ((error as DOMException)?.name !== 'AbortError') {
+          console.error('School lookup failed:', error);
+          setSchoolSuggestions([]);
+        }
+      } finally {
+        setIsSchoolLookupLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [schoolNameValue]);
 
   useEffect(() => {
     const examDateParam = searchParams.get('examDate');
@@ -195,16 +251,49 @@ function RegisterPageContent() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 relative" ref={suggestionContainerRef}>
               <Label htmlFor="schoolName" className="text-sm sm:text-base text-[#1d243c]">School Name *</Label>
               <Input
                 id="schoolName"
                 {...register('schoolName')}
                 placeholder="Enter school name"
+                autoComplete="off"
                 className={`h-11 sm:h-10 text-base ${errors.schoolName ? 'border-red-500' : ''}`}
+                onFocus={() => setIsSchoolInputFocused(true)}
+                onBlur={() => setTimeout(() => setIsSchoolInputFocused(false), 150)}
               />
               {errors.schoolName && (
                 <p className="text-sm text-red-500">{errors.schoolName.message}</p>
+              )}
+              {isSchoolInputFocused && (isSchoolLookupLoading || schoolSuggestions.length > 0) && (
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-[#e2e6f5] rounded-xl shadow-lg shadow-[#333b62]/10 z-30 overflow-hidden">
+                  {isSchoolLookupLoading && (
+                    <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#4b5575]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Searching schools...
+                    </div>
+                  )}
+                  {!isSchoolLookupLoading && schoolSuggestions.map((name) => (
+                    <button
+                      type="button"
+                      key={name}
+                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-[#f5f6fb] focus-visible:outline-none focus-visible:bg-[#eef1ff]"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        setValue('schoolName', name, { shouldValidate: true, shouldDirty: true });
+                        setIsSchoolInputFocused(false);
+                        setSchoolSuggestions([]);
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                  {!isSchoolLookupLoading && schoolSuggestions.length === 0 && (
+                    <div className="px-4 py-3 text-sm text-[#6c7394]">
+                      Keep typing to search for your school name.
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
