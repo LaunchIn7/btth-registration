@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { generateRegistrationId } from '@/lib/registration-id';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,11 +10,15 @@ export async function POST(request: NextRequest) {
     const db = client.db('btth_registration');
     const collection = db.collection('registrations');
 
+    const examType = body.examType || 'regular';
+    const registrationId = await generateRegistrationId(examType, 'draft');
+
     const registration = {
       ...body,
+      registrationId,
       status: 'draft',
       paymentStatus: 'pending',
-      examType: body.examType || 'regular',
+      examType,
       registrationAmount: body.registrationAmount || 500,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -24,6 +29,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       registrationId: result.insertedId.toString(),
+      regId: registrationId,
     });
   } catch (error) {
     console.error('Draft registration error:', error);

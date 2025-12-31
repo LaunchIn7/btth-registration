@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { updateRegistrationIdStatus } from '@/lib/registration-id';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,19 @@ export async function POST(request: NextRequest) {
       const db = client.db('btth_registration');
       const collection = db.collection('registrations');
 
+      const registration = await collection.findOne({ _id: new ObjectId(registrationId) });
+
+      if (!registration) {
+        return NextResponse.json(
+          { success: false, error: 'Registration not found' },
+          { status: 404 }
+        );
+      }
+
+      const updatedRegId = registration.registrationId
+        ? updateRegistrationIdStatus(registration.registrationId, 'completed')
+        : undefined;
+
       await collection.updateOne(
         { _id: new ObjectId(registrationId) },
         {
@@ -31,6 +45,7 @@ export async function POST(request: NextRequest) {
             paymentStatus: 'paid',
             paymentId: razorpay_payment_id,
             orderId: razorpay_order_id,
+            ...(updatedRegId && { registrationId: updatedRegId }),
             updatedAt: new Date(),
           },
         }

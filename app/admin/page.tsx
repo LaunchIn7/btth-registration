@@ -50,6 +50,7 @@ const CACHE_TTL_MS = 60 * 1000;
 
 type Registration = {
   _id: string;
+  registrationId?: string;
   studentName: string;
   currentClass: string;
   schoolName: string;
@@ -274,6 +275,20 @@ export default function AdminPage() {
       enableHiding: false,
     },
     {
+      accessorKey: 'registrationId',
+      header: 'Reg ID',
+      cell: ({ row }: any) => {
+        const regId = row.getValue('registrationId');
+        return regId ? (
+          <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded whitespace-nowrap inline-block">
+            {regId}
+          </span>
+        ) : (
+          <span className="text-xs text-zinc-400 whitespace-nowrap">Not assigned</span>
+        );
+      },
+    },
+    {
       accessorKey: 'studentName',
       header: ({ column }: any) => {
         return (
@@ -461,11 +476,13 @@ export default function AdminPage() {
   });
 
   const exportToCSV = () => {
-    const headers = ['Student Name', 'Registered On', 'Class', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
+      reg.registrationId || 'N/A',
       reg.studentName,
       new Date(reg.createdAt).toLocaleString('en-IN'),
       `Class ${reg.currentClass}`,
+      reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
       reg.schoolName,
       reg.parentMobile,
       new Date(reg.examDate).toLocaleDateString('en-IN'),
@@ -488,11 +505,13 @@ export default function AdminPage() {
   };
 
   const exportToExcel = () => {
-    const headers = ['Student Name', 'Registered On', 'Class', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
+      reg.registrationId || 'N/A',
       reg.studentName,
       new Date(reg.createdAt).toLocaleString('en-IN'),
       `Class ${reg.currentClass}`,
+      reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
       reg.schoolName,
       reg.parentMobile,
       new Date(reg.examDate).toLocaleDateString('en-IN'),
@@ -718,7 +737,7 @@ export default function AdminPage() {
             <div className="space-y-6">
               <div>
                 <p className="text-sm text-zinc-500">Registration ID</p>
-                <p className="font-semibold">{previewRegistration._id}</p>
+                <p className="font-mono font-bold text-blue-700">{previewRegistration.registrationId || previewRegistration._id}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
