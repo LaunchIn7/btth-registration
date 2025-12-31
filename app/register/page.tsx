@@ -328,7 +328,7 @@ function RegisterPageContent() {
                     )}
                   >
                     <span className="text-base sm:text-lg font-semibold text-[#1d243c]">11th January 2026</span>
-                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
+                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Sunday</span>
                     <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
                   </Label>
                 </div>
@@ -342,7 +342,7 @@ function RegisterPageContent() {
                     )}
                   >
                     <span className="text-base sm:text-lg font-semibold text-[#1d243c]">18th January 2026</span>
-                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Saturday</span>
+                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Sunday</span>
                     <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
                   </Label>
                 </div>
