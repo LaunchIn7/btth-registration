@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import testimonials from "@/public/testimonials.json";
+import Autoplay from "embla-carousel-autoplay";
 
 type Testimonial = (typeof testimonials)[number];
 
@@ -81,6 +82,11 @@ export function TestimonialsCarousel({ sectionId = "testimonials" }: Testimonial
         <div className="mt-8 md:mt-12">
           <Carousel
             opts={{ align: "start", loop: true, skipSnaps: false }}
+            plugins={[
+              Autoplay({
+                delay: 3000,
+              }),
+            ]}
             className="relative"
           >
             <CarouselContent className="-ml-3 sm:-ml-4">
