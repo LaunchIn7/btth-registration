@@ -126,4 +126,17 @@
   body {
     @apply bg-background text-foreground;
   }
+/* Compact table styling for admin registrations */
+table th {
+  @apply py-0.5 px-1.5 text-xs font-medium;
+}
+
+table td {
+  @apply py-0.5 px-1.5;
+}
+
+/* Tighter table rows */
+table tr {
+  @apply leading-tight;
+}
 }

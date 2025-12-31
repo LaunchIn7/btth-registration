@@ -280,11 +280,11 @@ export default function AdminPage() {
       cell: ({ row }: any) => {
         const regId = row.getValue('registrationId');
         return regId ? (
-          <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded whitespace-nowrap inline-block">
+          <span className="font-mono text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
             {regId}
           </span>
         ) : (
-          <span className="text-xs text-zinc-400 whitespace-nowrap">Not assigned</span>
+            <span className="text-[10px] text-zinc-400 whitespace-nowrap">N/A</span>
         );
       },
     },
@@ -294,33 +294,41 @@ export default function AdminPage() {
         return (
           <Button
             variant="ghost"
+            size="sm"
+            className="h-8 px-2"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Student Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1.5 h-3 w-3" />
           </Button>
         );
       },
+      cell: ({ row }: any) => (
+        <span className="text-xs font-medium leading-none">{row.getValue('studentName')}</span>
+      ),
     },
     {
       accessorKey: 'createdAt',
       header: 'Registered On',
       cell: ({ row }: any) => {
         const date = new Date(row.getValue('createdAt'));
-        return date.toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
+        return (
+          <span className="text-xs text-zinc-600 whitespace-nowrap">
+            {date.toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
       accessorKey: 'currentClass',
       header: 'Class',
-      cell: ({ row }: any) => `Class ${row.getValue('currentClass')}`,
+      cell: ({ row }: any) => (
+        <span className="text-xs font-medium leading-none">Class {row.getValue('currentClass')}</span>
+      ),
     },
     {
       accessorKey: 'examType',
@@ -329,7 +337,7 @@ export default function AdminPage() {
         const examType = row.getValue('examType');
         return (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${examType === 'foundation'
+            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${examType === 'foundation'
               ? 'bg-purple-100 text-purple-800'
               : 'bg-blue-100 text-blue-800'
               }`}
@@ -344,12 +352,15 @@ export default function AdminPage() {
       header: 'Fee',
       cell: ({ row }: any) => {
         const amount = row.getValue('registrationAmount');
-        return <span className="font-semibold">₹{amount || 500}</span>;
+        return <span className="text-xs font-semibold leading-none">₹{amount || 500}</span>;
       },
     },
     {
       accessorKey: 'schoolName',
       header: 'School',
+      cell: ({ row }: any) => (
+        <span className="text-[11px] text-zinc-700 leading-tight">{row.getValue('schoolName')}</span>
+      ),
     },
     {
       accessorKey: 'parentMobile',
@@ -357,7 +368,7 @@ export default function AdminPage() {
       cell: ({ row }: any) => {
         const mobile = row.getValue('parentMobile');
         return (
-          <a href={`tel:${mobile}`} className="font-semibold hover:underline">
+          <a href={`tel:${mobile}`} className="text-xs font-medium hover:underline whitespace-nowrap leading-none">
             {mobile}
           </a>
         );
@@ -368,16 +379,23 @@ export default function AdminPage() {
       header: 'Exam Date',
       cell: ({ row }: any) => {
         const date = new Date(row.getValue('examDate'));
-        return date.toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        });
+        return (
+          <span className="text-[11px] text-zinc-600 whitespace-nowrap leading-tight">
+            {date.toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
       accessorKey: 'referralSource',
       header: 'Source',
+      cell: ({ row }: any) => (
+        <span className="text-[11px] text-zinc-600 leading-tight">{row.getValue('referralSource')}</span>
+      ),
     },
     {
       accessorKey: 'status',
@@ -386,7 +404,7 @@ export default function AdminPage() {
         const status = row.getValue('status');
         return (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${status === 'completed'
+            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${status === 'completed'
               ? 'bg-green-100 text-green-800'
               : 'bg-yellow-100 text-yellow-800'
               }`}
@@ -403,7 +421,7 @@ export default function AdminPage() {
         const status = row.getValue('paymentStatus');
         return (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${status === 'paid'
+            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${status === 'paid'
               ? 'bg-green-100 text-green-800'
               : status === 'pending'
                 ? 'bg-yellow-100 text-yellow-800'
@@ -423,34 +441,33 @@ export default function AdminPage() {
         const isPaid = registration.paymentStatus === 'paid';
 
         return (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
-              size="icon-sm"
-              // disabled={!isPaid}
-              // title={isPaid ? 'Preview receipt' : 'Available after payment'}
+              size="sm"
+              className="h-6 w-6 p-0"
               title="Preview receipt"
               onClick={() => handleViewReceipt(registration)}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-3 w-3" />
             </Button>
             <Button
               variant="outline"
-              size="icon-sm"
-              // disabled={!isPaid}
-              // title={isPaid ? 'Download receipt' : 'Available after payment'}
+              size="sm"
+              className="h-6 w-6 p-0"
               title="Download receipt"
               onClick={() => downloadRegistrationReceipt(registration)}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-3 w-3" />
             </Button>
             <Button
               variant="destructive"
-              size="icon-sm"
+              size="sm"
+              className="h-6 w-6 p-0"
               title="Delete registration"
               onClick={() => handleDeleteRegistration(registration)}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         );
@@ -538,20 +555,20 @@ export default function AdminPage() {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-white to-blue-50">
-      <div className="shrink-0 p-6 pb-4">
+      <div className="shrink-0 px-6 pt-4 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 leading-tight" style={{ color: '#212529' }}>
+          <h1 className="text-xl sm:text-2xl font-bold mb-1 leading-tight" style={{ color: '#212529' }}>
             BTTH 2.0 Registrations
           </h1>
-          <p className="text-sm sm:text-base text-zinc-600">
+          <p className="text-xs sm:text-sm text-zinc-600">
             Manage and view all student registrations
           </p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row md:flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="flex-1 overflow-y-auto px-6 pb-4">
+        <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-2 mb-3">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-4 w-4" />
@@ -559,13 +576,13 @@ export default function AdminPage() {
                   placeholder="Search by name, mobile, or school..."
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-10 h-11 sm:h-10 text-base"
+                  className="pl-10 h-9 text-sm"
                 />
               </div>
             </div>
 
             <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-full md:w-[180px] h-11 sm:h-10">
+              <SelectTrigger className="w-full md:w-[160px] h-9 text-sm">
                 <SelectValue placeholder="Filter by Class" />
               </SelectTrigger>
               <SelectContent>
@@ -577,7 +594,7 @@ export default function AdminPage() {
             </Select>
 
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full md:w-[180px] h-11 sm:h-10">
+              <SelectTrigger className="w-full md:w-[160px] h-9 text-sm">
                 <SelectValue placeholder="Filter by Date" />
               </SelectTrigger>
               <SelectContent>
@@ -588,7 +605,7 @@ export default function AdminPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[180px] h-11 sm:h-10">
+              <SelectTrigger className="w-full md:w-[160px] h-9 text-sm">
                 <SelectValue placeholder="Filter by Status" />
               </SelectTrigger>
               <SelectContent>
@@ -598,23 +615,24 @@ export default function AdminPage() {
               </SelectContent>
             </Select>
 
-            <Button onClick={exportToCSV} variant="outline" className="w-full md:w-auto min-h-[44px]">
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
+            <Button onClick={exportToCSV} variant="outline" size="sm" className="w-full md:w-auto h-9">
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              CSV
             </Button>
 
-            <Button onClick={exportToExcel} variant="outline" className="w-full md:w-auto min-h-[44px]">
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Export Excel
+            <Button onClick={exportToExcel} variant="outline" size="sm" className="w-full md:w-auto h-9">
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+              Excel
             </Button>
 
             <Button
               onClick={handleManualRefresh}
               variant="secondary"
-              className="w-full md:w-auto min-h-[44px]"
+              size="sm"
+              className="w-full md:w-auto h-9"
               disabled={loading}
             >
-              <RefreshCcw className="mr-2 h-4 w-4" />
+              <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
               Refresh
             </Button>
           </div>
@@ -649,7 +667,7 @@ export default function AdminPage() {
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
@@ -700,8 +718,8 @@ export default function AdminPage() {
                 </Table>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 py-4">
-                <div className="text-xs sm:text-sm text-zinc-600">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3">
+                  <div className="text-xs text-zinc-600">
                   Showing {table.getRowModel().rows.length} of {registrations.length} registrations
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
