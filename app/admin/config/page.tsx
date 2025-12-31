@@ -103,7 +103,7 @@ export default function ConfigPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
+    <div className="min-h-[calc(100vh-228px)] max-h-[calc(100vh-228px)] md:min-h-[calc(100vh-64px)] md:max-h-[calc(100vh-64px)] overflow-y-scroll bg-linear-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-5xl">
         <Link href="/admin" className="inline-flex items-center text-[#333b62] hover:text-[#272d4e] mb-4 sm:mb-6 min-h-[44px] -ml-2 pl-2 font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -167,6 +167,7 @@ export default function ConfigPage() {
                           id={`label-${index}`}
                           value={date.label}
                           onChange={(e) => updateExamDate(index, 'label', e.target.value)}
+                          className='mt-2'
                           placeholder="Slot 1"
                         />
                       </div>
@@ -178,6 +179,7 @@ export default function ConfigPage() {
                           type="date"
                           value={date.value}
                           onChange={(e) => updateExamDate(index, 'value', e.target.value)}
+                          className='mt-2'
                         />
                       </div>
 
@@ -187,6 +189,7 @@ export default function ConfigPage() {
                           id={`time-${index}`}
                           value={date.time}
                           onChange={(e) => updateExamDate(index, 'time', e.target.value)}
+                          className='mt-2'
                           placeholder="12:00 PM"
                         />
                       </div>
@@ -197,6 +200,7 @@ export default function ConfigPage() {
                           id={`reportingTime-${index}`}
                           value={date.reportingTime || ''}
                           onChange={(e) => updateExamDate(index, 'reportingTime', e.target.value)}
+                          className='mt-2'
                           placeholder="11:30 AM"
                         />
                       </div>
@@ -233,7 +237,7 @@ export default function ConfigPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
+                    ₹
                   Pricing Configuration
                 </CardTitle>
                 <CardDescription>
@@ -251,7 +255,7 @@ export default function ConfigPage() {
                         type="number"
                         value={pricing.foundation}
                         onChange={(e) => setPricing({ ...pricing, foundation: Number(e.target.value) })}
-                        className="pl-8"
+                          className="pl-8 mt-2"
                         min="0"
                       />
                     </div>
@@ -269,7 +273,7 @@ export default function ConfigPage() {
                         type="number"
                         value={pricing.regular}
                         onChange={(e) => setPricing({ ...pricing, regular: Number(e.target.value) })}
-                        className="pl-8"
+                          className="pl-8 mt-2"
                         min="0"
                       />
                     </div>

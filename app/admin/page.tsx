@@ -530,16 +530,16 @@ export default function AdminPage() {
 
   if (!isLoaded || !isSignedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-6 sm:py-8 md:py-12">
-      <div className="container mx-auto px-4">
-        <div className="mb-6 sm:mb-8">
+    <div className="h-full flex flex-col bg-gradient-to-b from-white to-blue-50">
+      <div className="shrink-0 p-6 pb-4">
+        <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 leading-tight" style={{ color: '#212529' }}>
             BTTH 2.0 Registrations
           </h1>
@@ -547,10 +547,12 @@ export default function AdminPage() {
             Manage and view all student registrations
           </p>
         </div>
+      </div>
 
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="flex-1">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-4 w-4" />
                 <Input
@@ -652,7 +654,7 @@ export default function AdminPage() {
             </div>
           ) : (
             <>
-              <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -725,6 +727,7 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>

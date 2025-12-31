@@ -151,7 +151,7 @@ export default function Home() {
                 </p>
                 <p className="text-sm text-[#6c7394]">
                   {config.examDates[0]?.reportingTime && `Reporting ${config.examDates[0].reportingTime} · `}
-                  Test starts {config.examDates[0]?.time || '12:00 PM'}. Choose the slot that suits you—pattern and difficulty stay identical.
+                  Test starts {config.examDates[0]?.time || '12:00 PM'}. Choose the slot that suits you - pattern and difficulty stay identical.
                 </p>
               </>
             ) : (
