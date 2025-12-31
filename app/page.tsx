@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 import { Award, BookOpen, CalendarDays, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +7,7 @@ import Image from "next/image";
 import { TestimonialsCarousel } from "@/components/testimonials-carousel";
 import ExamSlots from "@/components/registration/exam-slots";
 import WhyBtth from "@/components/landing/why-btth";
+import { useExamConfig } from "@/lib/hooks/use-exam-config";
 
 const brandPrimary = '#333b62';
 const brandDark = '#272d4e';
@@ -12,6 +15,7 @@ const brandLight = '#f5f6fb';
 const accent = '#f2a900';
 
 export default function Home() {
+  const { config } = useExamConfig();
   return (
     <div className="min-h-screen bg-linear-to-b from-[#f5f6fb] via-[#edf0fb] to-[#dfe3fb] text-[#1d243c]">
       <section id="overview" className="container mx-auto px-4 py-8 sm:py-12 md:py-16 lg:py-24">
@@ -135,12 +139,26 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
           <div className="bg-white p-6 sm:p-8 rounded-lg sm:rounded-xl space-y-3 sm:space-y-4 border border-[#e1e4f3] shadow-sm">
             <h3 className="text-lg sm:text-xl font-bold leading-tight" style={{ color: '#1d243c' }}>Exam Dates</h3>
-            <p className="text-sm sm:text-base text-[#4b5575]">
-              <strong>11 January 2026</strong> and <strong>18 January 2026</strong>
-            </p>
-            <p className="text-sm text-[#6c7394]">
-              Reporting 11:30 AM · Test starts 12:00 PM on both days. Choose the slot that suits you—pattern and difficulty stay identical.
-            </p>
+            {config && config.examDates.length > 0 ? (
+              <>
+                <p className="text-sm sm:text-base text-[#4b5575]">
+                  {config.examDates.map((date, index) => (
+                    <span key={date.id}>
+                      <strong>{date.displayDate}</strong>
+                      {index < config.examDates.length - 1 && (index === config.examDates.length - 2 ? ' and ' : ', ')}
+                    </span>
+                  ))}
+                </p>
+                <p className="text-sm text-[#6c7394]">
+                  {config.examDates[0]?.reportingTime && `Reporting ${config.examDates[0].reportingTime} · `}
+                  Test starts {config.examDates[0]?.time || '12:00 PM'}. Choose the slot that suits you—pattern and difficulty stay identical.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm sm:text-base text-[#4b5575]">
+                <strong>Exam dates will be announced soon</strong>
+              </p>
+            )}
           </div>
 
           <div className="bg-white p-6 sm:p-8 rounded-lg sm:rounded-xl space-y-3 sm:space-y-4 border border-[#e1e4f3] shadow-sm">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,22 +14,31 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useExamConfig, getRegistrationFee, getExamType } from '@/lib/hooks/use-exam-config';
 
-const registrationSchema = z.object({
+const createRegistrationSchema = (examDateValues: string[]) => z.object({
   studentName: z.string().min(2, 'Name must be at least 2 characters'),
   currentClass: z.enum(['7', '8', '9', '10', '11', '12'], {
     message: 'Please select a class',
   }),
   schoolName: z.string().min(2, 'School name is required'),
   parentMobile: z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number'),
-  examDate: z.enum(['2026-01-11', '2026-01-18'], {
+  examDate: examDateValues.length > 0 ? z.enum(examDateValues as [string, ...string[]], {
     message: 'Please select an exam date',
-  }),
+  }) : z.string().min(1, 'Please select an exam date'),
   referralSource: z.string().min(1, 'Please select how you heard about us'),
   referralOther: z.string().optional(),
 });
 
-type RegistrationFormData = z.infer<typeof registrationSchema>;
+type RegistrationFormData = {
+  studentName: string;
+  currentClass: '7' | '8' | '9' | '10' | '11' | '12';
+  schoolName: string;
+  parentMobile: string;
+  examDate: string;
+  referralSource: string;
+  referralOther?: string;
+};
 
 declare global {
   interface Window {
@@ -42,6 +51,18 @@ function RegisterPageContent() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
+  const { config, loading: configLoading } = useExamConfig();
+
+  // Memoize examDateValues to prevent infinite loop
+  const examDateValues = useMemo(() =>
+    config?.examDates.map(d => d.value) || [],
+    [config?.examDates]
+  );
+
+  const registrationSchema = useMemo(() =>
+    createRegistrationSchema(examDateValues),
+    [examDateValues]
+  );
 
   const {
     register,
@@ -59,9 +80,9 @@ function RegisterPageContent() {
   const schoolNameValue = watch('schoolName');
 
   // Calculate registration fee based on class
-  const registrationFee = currentClass && ['7', '8', '9'].includes(currentClass) ? 200 : 500;
+  const registrationFee = currentClass && config ? getRegistrationFee(currentClass, config.pricing) : 500;
   const feeInPaise = registrationFee * 100;
-  const examType = currentClass && ['7', '8', '9'].includes(currentClass) ? 'foundation' : 'regular';
+  const examType = currentClass ? getExamType(currentClass) : 'regular';
 
   const [schoolSuggestions, setSchoolSuggestions] = useState<string[]>([]);
   const [isSchoolLookupLoading, setIsSchoolLookupLoading] = useState(false);
@@ -120,10 +141,10 @@ function RegisterPageContent() {
 
   useEffect(() => {
     const examDateParam = searchParams.get('examDate');
-    if (examDateParam && ['2026-01-11', '2026-01-18'].includes(examDateParam)) {
-      setValue('examDate', examDateParam as '2026-01-11' | '2026-01-18');
+    if (examDateParam && examDateValues.length > 0 && examDateValues.includes(examDateParam)) {
+      setValue('examDate', examDateParam as any);
     }
-  }, [searchParams, setValue]);
+  }, [searchParams, examDateValues, setValue]);
 
   const onSubmit = async (data: RegistrationFormData) => {
     setIsSubmitting(true);
@@ -200,8 +221,26 @@ function RegisterPageContent() {
     }
   };
 
+  if (configLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] text-[#1d243c]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#333b62]" />
+      </div>
+    );
+  }
+
+  if (!config) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] text-[#1d243c]">
+        <div className="text-center">
+          <p className="text-lg text-red-600">Unable to load exam configuration. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] py-6 sm:py-8 md:py-12 text-[#1d243c]">
+    <div className="min-h-screen bg-linear-to-b from-[#f5f6fb] via-[#eceffc] to-[#e0e5f7] py-6 sm:py-8 md:py-12 text-[#1d243c]">
       <div className="container mx-auto px-4 max-w-3xl">
         <Link href="/" className="inline-flex items-center text-[#333b62] hover:text-[#272d4e] mb-4 sm:mb-6 min-h-[44px] -ml-2 pl-2 font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -318,34 +357,22 @@ function RegisterPageContent() {
                 onValueChange={(value) => setValue('examDate', value as any)}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               >
-                <div className="relative">
-                  <RadioGroupItem value="2026-01-11" id="date1" className="peer sr-only" />
-                  <Label
-                    htmlFor="date1"
-                    className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-[#e1e4f3] bg-white p-4 hover:bg-[#f5f6fb] peer-data-[state=checked]:border-[#333b62] peer-data-[state=checked]:bg-[#f0f2fb] cursor-pointer transition-all min-h-[80px]",
-                      errors.examDate && "border-red-300"
-                    )}
-                  >
-                    <span className="text-base sm:text-lg font-semibold text-[#1d243c]">11th January 2026</span>
-                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Sunday</span>
-                    <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
-                  </Label>
-                </div>
-                <div className="relative">
-                  <RadioGroupItem value="2026-01-18" id="date2" className="peer sr-only" />
-                  <Label
-                    htmlFor="date2"
-                    className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-[#e1e4f3] bg-white p-4 hover:bg-[#f5f6fb] peer-data-[state=checked]:border-[#333b62] peer-data-[state=checked]:bg-[#f0f2fb] cursor-pointer transition-all min-h-[80px]",
-                      errors.examDate && "border-red-300"
-                    )}
-                  >
-                    <span className="text-base sm:text-lg font-semibold text-[#1d243c]">18th January 2026</span>
-                    <span className="text-xs sm:text-sm text-[#6c7394] mt-1">Sunday</span>
-                    <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at 12:00 PM</span>
-                  </Label>
-                </div>
+                {config.examDates.map((examDate, index) => (
+                  <div key={examDate.id} className="relative">
+                    <RadioGroupItem value={examDate.value} id={`date${index + 1}`} className="peer sr-only" />
+                    <Label
+                      htmlFor={`date${index + 1}`}
+                      className={cn(
+                        "flex flex-col items-center justify-center rounded-lg border-2 border-[#e1e4f3] bg-white p-4 hover:bg-[#f5f6fb] peer-data-[state=checked]:border-[#333b62] peer-data-[state=checked]:bg-[#f0f2fb] cursor-pointer transition-all min-h-[80px]",
+                        errors.examDate && "border-red-300"
+                      )}
+                    >
+                      <span className="text-base sm:text-lg font-semibold text-[#1d243c]">{examDate.displayDate}</span>
+                      <span className="text-xs sm:text-sm text-[#6c7394] mt-1">{examDate.dayOfWeek}</span>
+                      <span className="text-xs sm:text-sm text-[#107a48] font-medium mt-1">Exam at {examDate.time}</span>
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
               {errors.examDate && (
                 <p className="text-sm text-red-500">{errors.examDate.message}</p>
@@ -394,13 +421,35 @@ function RegisterPageContent() {
             )}
 
             <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
-              <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#212529' }}>
-                Registration Fee: ₹{registrationFee}
-              </h3>
-              {currentClass && ['7', '8', '9'].includes(currentClass) && (
-                <p className="text-xs sm:text-sm text-[#4b5575] mt-1">
-                  Foundation Course Exam Fee
-                </p>
+              {currentClass ? (
+                <>
+                  <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#212529' }}>
+                    Registration Fee: ₹{registrationFee}
+                  </h3>
+                  {['7', '8', '9'].includes(currentClass) && (
+                    <p className="text-xs sm:text-sm text-[#4b5575] mt-1">
+                      Foundation Course Exam Fee
+                    </p>
+                  )}
+                  {['10', '11', '12'].includes(currentClass) && (
+                    <p className="text-xs sm:text-sm text-[#4b5575] mt-1">
+                      Regular Course Exam Fee
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="text-center">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2" style={{ color: '#212529' }}>
+                    Registration Fee
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#4b5575]">
+                    Please select your current class to see the registration fee
+                  </p>
+                  <div className="mt-3 text-xs text-[#6b7280]">
+                    <p>• Classes 7-9: ₹{config?.pricing.foundation || 200}</p>
+                    <p>• Classes 10-12: ₹{config?.pricing.regular || 500}</p>
+                  </div>
+                </div>
               )}
             </div>
 
