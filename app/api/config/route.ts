@@ -22,10 +22,12 @@ export async function GET() {
     }
 
     // Filter enabled dates and enrich with computed fields
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const filteredConfig = {
       ...config,
       examDates: config.examDates
-        .filter(date => date.enabled)
+        .filter(date => date.enabled && date.value >= today)
         .map(date => enrichExamDate(date)),
       pricing: config.pricing,
     };

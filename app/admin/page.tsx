@@ -89,6 +89,7 @@ export default function AdminPage() {
   const [classFilter, setClassFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [availableExamDates, setAvailableExamDates] = useState<string[]>([]);
   const [previewRegistration, setPreviewRegistration] = useState<Registration | null>(null);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [editRegistration, setEditRegistration] = useState<Registration | null>(null);
@@ -124,6 +125,23 @@ export default function AdminPage() {
       }
     };
   }, [isSignedIn, classFilter, dateFilter, statusFilter, globalFilter]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    const fetchExamDates = async () => {
+      try {
+        const response = await axiosInstance.get('/registrations/exam-dates');
+        const dates = (response.data?.data || []) as string[];
+        setAvailableExamDates(Array.isArray(dates) ? dates : []);
+      } catch (error) {
+        console.error('Failed to fetch available exam dates:', error);
+        setAvailableExamDates([]);
+      }
+    };
+
+    fetchExamDates();
+  }, [isSignedIn]);
 
   useEffect(() => {
     setSelectedRowIds((prev) => prev.filter((id) => registrations.some((reg) => reg._id === id)));
@@ -171,6 +189,28 @@ export default function AdminPage() {
   const handleManualRefresh = () => {
     cacheRef.current.clear();
     fetchRegistrations(false);
+
+    axiosInstance
+      .get('/registrations/exam-dates')
+      .then((response) => {
+        const dates = (response.data?.data || []) as string[];
+        setAvailableExamDates(Array.isArray(dates) ? dates : []);
+      })
+      .catch((error) => {
+        console.error('Failed to refresh available exam dates:', error);
+      });
+  };
+
+  const formatExamDateOption = (value: string) => {
+    try {
+      return new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch (_error) {
+      return value;
+    }
   };
 
   const handleViewReceipt = (registration: Registration) => {
@@ -676,8 +716,11 @@ export default function AdminPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Dates</SelectItem>
-                <SelectItem value="2026-01-11">11th Jan 2026</SelectItem>
-                <SelectItem value="2026-01-18">18th Jan 2026</SelectItem>
+                {availableExamDates.map((date) => (
+                  <SelectItem key={date} value={date}>
+                    {formatExamDateOption(date)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
