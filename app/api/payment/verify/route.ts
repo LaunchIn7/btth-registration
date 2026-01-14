@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (registration.paymentStatus === 'paid') {
+        return NextResponse.json({
+          success: true,
+          message: 'Payment already verified',
+        });
+      }
+
       const updatedRegId = registration.registrationId
         ? updateRegistrationIdStatus(registration.registrationId, 'completed')
         : undefined;
@@ -45,6 +52,7 @@ export async function POST(request: NextRequest) {
             paymentStatus: 'paid',
             paymentId: razorpay_payment_id,
             orderId: razorpay_order_id,
+            razorpaySignature: razorpay_signature,
             ...(updatedRegId && { registrationId: updatedRegId }),
             updatedAt: new Date(),
           },
