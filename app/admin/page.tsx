@@ -13,7 +13,7 @@ import {
   ColumnFiltersState,
   ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Download, Eye, FileSpreadsheet, RefreshCcw, Search, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Download, Eye, FileSpreadsheet, Pencil, RefreshCcw, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,6 +31,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -55,8 +56,10 @@ type Registration = {
   currentClass: string;
   schoolName: string;
   parentMobile: string;
+  email?: string;
   examDate: string;
   referralSource: string;
+  referralOther?: string;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -65,6 +68,7 @@ type Registration = {
   razorpay_payment_id?: string;
   orderId?: string;
   razorpay_order_id?: string;
+  razorpaySignature?: string;
   examType?: string;
   registrationAmount?: number;
 };
@@ -87,6 +91,9 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [previewRegistration, setPreviewRegistration] = useState<Registration | null>(null);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [editRegistration, setEditRegistration] = useState<Registration | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Registration> & { razorpaySignature?: string }>({});
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ type: 'single' | 'bulk'; registration?: Registration } | null>(null);
@@ -169,6 +176,51 @@ export default function AdminPage() {
   const handleViewReceipt = (registration: Registration) => {
     setPreviewRegistration(registration);
     setIsReceiptDialogOpen(true);
+  };
+
+  const handleEditRegistration = (registration: Registration) => {
+    setEditRegistration(registration);
+    setEditForm({
+      studentName: registration.studentName,
+      currentClass: registration.currentClass,
+      schoolName: registration.schoolName,
+      parentMobile: registration.parentMobile,
+      email: registration.email,
+      examDate: registration.examDate,
+      referralSource: registration.referralSource,
+      referralOther: registration.referralOther,
+      status: registration.status,
+      paymentStatus: registration.paymentStatus,
+      paymentId:
+        registration.paymentId ||
+        registration.razorpayPaymentId ||
+        registration.razorpay_payment_id,
+      orderId: registration.orderId || registration.razorpay_order_id,
+      razorpaySignature: registration.razorpaySignature,
+      examType: registration.examType,
+      registrationAmount: registration.registrationAmount,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const saveRegistrationEdits = async () => {
+    if (!editRegistration) return;
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      await axiosInstance.patch(`/registrations/${editRegistration._id}`, editForm);
+      cacheRef.current.clear();
+      await fetchRegistrations(false);
+      setIsEditDialogOpen(false);
+      setEditRegistration(null);
+      setEditForm({});
+    } catch (error) {
+      console.error('Failed to update registration:', error);
+      setErrorMessage('Failed to update registration. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteRegistration = (registration: Registration) => {
@@ -285,6 +337,20 @@ export default function AdminPage() {
           </span>
         ) : (
             <span className="text-[10px] text-zinc-400 whitespace-nowrap">N/A</span>
+        );
+      },
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: ({ row }: any) => {
+        const email = row.getValue('email');
+        return email ? (
+          <a href={`mailto:${email}`} className="text-[11px] text-zinc-700 hover:underline whitespace-nowrap leading-tight">
+            {email}
+          </a>
+        ) : (
+          <span className="text-[11px] text-zinc-400 whitespace-nowrap">N/A</span>
         );
       },
     },
@@ -455,6 +521,15 @@ export default function AdminPage() {
               variant="outline"
               size="sm"
               className="h-6 w-6 p-0"
+              title="Edit registration"
+              onClick={() => handleEditRegistration(registration)}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 w-6 p-0"
               title="Download receipt"
               onClick={() => downloadRegistrationReceipt(registration)}
             >
@@ -493,7 +568,7 @@ export default function AdminPage() {
   });
 
   const exportToCSV = () => {
-    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
       reg.registrationId || 'N/A',
       reg.studentName,
@@ -502,6 +577,7 @@ export default function AdminPage() {
       reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
       reg.schoolName,
       reg.parentMobile,
+      reg.email || '',
       new Date(reg.examDate).toLocaleDateString('en-IN'),
       reg.referralSource,
       reg.status,
@@ -522,7 +598,7 @@ export default function AdminPage() {
   };
 
   const exportToExcel = () => {
-    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
       reg.registrationId || 'N/A',
       reg.studentName,
@@ -531,6 +607,7 @@ export default function AdminPage() {
       reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
       reg.schoolName,
       reg.parentMobile,
+      reg.email || '',
       new Date(reg.examDate).toLocaleDateString('en-IN'),
       reg.referralSource,
       reg.status,
@@ -554,7 +631,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-white to-blue-50">
+    <div className="h-full flex flex-col bg-linear-to-b from-white to-blue-50">
       <div className="shrink-0 px-6 pt-4 pb-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold mb-1 leading-tight" style={{ color: '#212529' }}>
@@ -573,7 +650,7 @@ export default function AdminPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-4 w-4" />
                 <Input
-                  placeholder="Search by name, mobile, or school..."
+                  placeholder="Search by name, mobile, email, or school..."
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="pl-10 h-9 text-sm"
@@ -778,6 +855,10 @@ export default function AdminPage() {
                   <p className="font-semibold">{previewRegistration.parentMobile}</p>
                 </div>
                 <div>
+                  <p className="text-zinc-500">Email</p>
+                  <p className="font-semibold">{previewRegistration.email || 'N/A'}</p>
+                </div>
+                <div>
                   <p className="text-zinc-500">Exam Date</p>
                   <p className="font-semibold">
                     {new Date(previewRegistration.examDate).toLocaleDateString('en-IN', {
@@ -826,6 +907,133 @@ export default function AdminPage() {
           ) : (
             <p className="text-sm text-zinc-500">Select a registration to preview the receipt.</p>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Registration</DialogTitle>
+            <DialogDescription>
+              Update student details and reconcile payment fields if needed.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editRegistration ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Student Name</p>
+                <Input
+                  value={editForm.studentName || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, studentName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Class</p>
+                <Input
+                  value={editForm.currentClass || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, currentClass: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">School Name</p>
+                <Input
+                  value={editForm.schoolName || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, schoolName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Parent Mobile</p>
+                <Input
+                  value={editForm.parentMobile || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, parentMobile: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Email</p>
+                <Input
+                  value={editForm.email || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Exam Date (ISO)</p>
+                <Input
+                  value={editForm.examDate || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, examDate: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Status</p>
+                <Select
+                  value={(editForm.status as string) || ''}
+                  onValueChange={(value) => setEditForm((prev) => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">draft</SelectItem>
+                    <SelectItem value="completed">completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Payment Status</p>
+                <Select
+                  value={(editForm.paymentStatus as string) || ''}
+                  onValueChange={(value) => setEditForm((prev) => ({ ...prev, paymentStatus: value }))}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select payment status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">pending</SelectItem>
+                    <SelectItem value="paid">paid</SelectItem>
+                    <SelectItem value="failed">failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Razorpay Payment ID</p>
+                <Input
+                  value={(editForm.paymentId as string) || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, paymentId: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">Razorpay Order ID</p>
+                <Input
+                  value={(editForm.orderId as string) || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, orderId: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <p className="text-xs text-zinc-500">Razorpay Signature</p>
+                <Input
+                  value={(editForm.razorpaySignature as string) || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, razorpaySignature: e.target.value }))}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500">Select a registration to edit.</p>
+          )}
+
+          <DialogFooter>
+            {errorMessage && (
+              <p className="text-sm text-red-600 mr-auto">{errorMessage}</p>
+            )}
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button onClick={saveRegistrationEdits} disabled={loading || !editRegistration}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

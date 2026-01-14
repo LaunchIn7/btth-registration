@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         { studentName: { $regex: search, $options: 'i' } },
         { parentMobile: { $regex: search, $options: 'i' } },
         { schoolName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 

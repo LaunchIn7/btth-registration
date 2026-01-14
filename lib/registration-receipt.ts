@@ -6,6 +6,7 @@ export type RegistrationReceiptData = {
   currentClass: string;
   schoolName: string;
   parentMobile: string;
+  email?: string;
   examDate: string;
   paymentStatus?: string;
   paymentId?: string;
@@ -84,6 +85,7 @@ export const downloadRegistrationReceipt = (
     ['Current Class:', `Class ${registration.currentClass}`],
     ['School Name:', registration.schoolName],
     ['Parent Mobile:', registration.parentMobile],
+    ['Email:', registration.email || 'N/A'],
   ];
 
   studentDetails.forEach(([label, value]) => {

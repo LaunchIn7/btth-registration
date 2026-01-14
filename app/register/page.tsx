@@ -23,6 +23,7 @@ const createRegistrationSchema = (examDateValues: string[]) => z.object({
   }),
   schoolName: z.string().min(2, 'School name is required'),
   parentMobile: z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number'),
+  email: z.string().email('Please enter a valid email address'),
   examDate: examDateValues.length > 0 ? z.enum(examDateValues as [string, ...string[]], {
     message: 'Please select an exam date',
   }) : z.string().min(1, 'Please select an exam date'),
@@ -35,6 +36,7 @@ type RegistrationFormData = {
   currentClass: '7' | '8' | '9' | '10' | '11' | '12';
   schoolName: string;
   parentMobile: string;
+  email: string;
   examDate: string;
   referralSource: string;
   referralOther?: string;
@@ -192,6 +194,7 @@ function RegisterPageContent() {
         prefill: {
           name: data.studentName,
           contact: data.parentMobile,
+          email: data.email,
         },
         theme: {
           color: '#4F46E5',
@@ -347,6 +350,20 @@ function RegisterPageContent() {
               />
               {errors.parentMobile && (
                 <p className="text-sm text-red-500">{errors.parentMobile.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm sm:text-base text-[#1d243c]">Email Address *</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register('email')}
+                placeholder="Enter email address"
+                className={`h-11 sm:h-10 text-base ${errors.email ? 'border-red-500' : ''}`}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
 
