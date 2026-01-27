@@ -59,7 +59,7 @@ export const downloadRegistrationReceipt = (
   yPos = 65;
 
   doc.setFontSize(10);
-  doc.text(`Reg Id: ${registration.registrationId || registration._id}`, 20, yPos);
+  doc.text(`Registration Id: ${registration.registrationId || registration._id}`, 20, yPos);
   doc.text(
     `Date: ${registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN', {
       day: 'numeric',
