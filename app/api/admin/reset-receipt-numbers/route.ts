@@ -23,7 +23,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: 'Successfully reset all receipt numbers. Please run the migration again.',
+      message: 'Successfully reset all receipt numbers. Only paid registrations will receive new receipt numbers after migration.',
     });
   } catch (error) {
     console.error('Failed to reset receipt numbers:', error);

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { updateRegistrationIdStatus } from '@/lib/registration-id';
+import { generateReceiptNumber } from '@/lib/receipt-number';
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,12 +75,16 @@ export async function POST(request: NextRequest) {
       ? updateRegistrationIdStatus(registration.registrationId, 'completed')
       : undefined;
 
+    // Generate receipt number only for paid registrations
+    const receiptNo = await generateReceiptNumber();
+
     await collection.updateOne(
       { _id: registration._id },
       {
         $set: {
           status: 'completed',
           paymentStatus: 'paid',
+          receiptNo,
           ...(paymentId && { paymentId }),
           ...(orderId && { orderId }),
           ...(updatedRegId && { registrationId: updatedRegId }),

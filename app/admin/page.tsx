@@ -12,6 +12,7 @@ import {
   SortingState,
   ColumnFiltersState,
   ColumnDef,
+  PaginationState,
 } from '@tanstack/react-table';
 import { ArrowUpDown, Download, Eye, FileSpreadsheet, Pencil, RefreshCcw, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -84,9 +85,14 @@ export default function AdminPage() {
   const { redirectToSignIn } = useClerk();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [classFilter, setClassFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -125,7 +131,7 @@ export default function AdminPage() {
         clearTimeout(fetchTimeoutRef.current);
       }
     };
-  }, [isSignedIn, classFilter, dateFilter, statusFilter, globalFilter]);
+  }, [isSignedIn, classFilter, dateFilter, statusFilter, globalFilter, pagination.pageIndex, pagination.pageSize, sorting]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -158,6 +164,17 @@ export default function AdminPage() {
       if (shouldApplyFilter(statusFilter)) params.append('status', statusFilter);
       if (globalFilter) params.append('search', globalFilter);
 
+      // Add pagination parameters
+      params.append('page', String(pagination.pageIndex + 1));
+      params.append('limit', String(pagination.pageSize));
+
+      // Add sorting parameters
+      if (sorting.length > 0) {
+        const sort = sorting[0];
+        params.append('sortBy', sort.id);
+        params.append('sortOrder', sort.desc ? 'desc' : 'asc');
+      }
+
       const cacheKey = params.toString() || '__all__';
       const cached = useCache ? cacheRef.current.get(cacheKey) : undefined;
       const now = Date.now();
@@ -175,7 +192,11 @@ export default function AdminPage() {
       setLoading(true);
       const response = await axiosInstance.get(`/registrations/list?${params.toString()}`);
       const registrationsData = response.data.data as Registration[];
+      const paginationData = response.data.pagination;
+
       setRegistrations(registrationsData);
+      setTotalCount(paginationData.total);
+
       cacheRef.current.set(cacheKey, {
         data: registrationsData,
         expiry: now + CACHE_TTL_MS,
@@ -382,20 +403,6 @@ export default function AdminPage() {
       },
     },
     {
-      accessorKey: 'receiptNo',
-      header: 'Receipt No',
-      cell: ({ row }: any) => {
-        const receiptNo = row.getValue('receiptNo');
-        return receiptNo ? (
-          <span className="font-mono text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
-            {receiptNo}
-          </span>
-        ) : (
-          <span className="text-[10px] text-zinc-400 whitespace-nowrap">N/A</span>
-        );
-      },
-    },
-    {
       accessorKey: 'email',
       header: 'Email',
       cell: ({ row }: any) => {
@@ -519,6 +526,20 @@ export default function AdminPage() {
       ),
     },
     {
+      accessorKey: 'receiptNo',
+      header: 'Receipt No',
+      cell: ({ row }: any) => {
+        const receiptNo = row.getValue('receiptNo');
+        return receiptNo ? (
+          <span className="font-mono text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
+            {receiptNo}
+          </span>
+        ) : (
+          <span className="text-[10px] text-zinc-400 whitespace-nowrap">N/A</span>
+        );
+      },
+    },
+    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }: any) => {
@@ -615,68 +636,122 @@ export default function AdminPage() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     state: {
       sorting,
       columnFilters,
       globalFilter,
+      pagination,
     },
+    manualPagination: true,
+    pageCount: Math.ceil(totalCount / pagination.pageSize),
   });
 
-  const exportToCSV = () => {
-    const headers = ['Reg ID', 'Receipt No', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
-    const rows = registrations.map((reg: any) => [
-      reg.registrationId || 'N/A',
-      reg.receiptNo || 'N/A',
-      reg.studentName,
-      new Date(reg.createdAt).toLocaleString('en-IN'),
-      `Class ${reg.currentClass}`,
-      reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
-      reg.schoolName,
-      reg.parentMobile,
-      reg.email || '',
-      new Date(reg.examDate).toLocaleDateString('en-IN'),
-      reg.referralSource,
-      reg.status,
-      reg.paymentStatus,
-    ]);
+  const exportToCSV = async () => {
+    try {
+      const params = new URLSearchParams();
+      const shouldApplyFilter = (value: string) => value && value !== 'all';
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
+      if (shouldApplyFilter(classFilter)) params.append('class', classFilter);
+      if (shouldApplyFilter(dateFilter)) params.append('examDate', dateFilter);
+      if (shouldApplyFilter(statusFilter)) params.append('status', statusFilter);
+      if (globalFilter) params.append('search', globalFilter);
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `btth-registrations-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+      // Fetch all data for export
+      params.append('page', '1');
+      params.append('limit', '10000'); // Large number to get all records
+
+      if (sorting.length > 0) {
+        const sort = sorting[0];
+        params.append('sortBy', sort.id);
+        params.append('sortOrder', sort.desc ? 'desc' : 'asc');
+      }
+
+      const response = await axiosInstance.get(`/registrations/list?${params.toString()}`);
+      const allRegistrations = response.data.data as Registration[];
+
+      const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Receipt No', 'Status', 'Payment'];
+      const rows = allRegistrations.map((reg: any) => [
+        reg.registrationId || 'N/A',
+        reg.studentName,
+        new Date(reg.createdAt).toLocaleString('en-IN'),
+        `Class ${reg.currentClass}`,
+        reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
+        reg.schoolName,
+        reg.parentMobile,
+        reg.email || '',
+        new Date(reg.examDate).toLocaleDateString('en-IN'),
+        reg.referralSource,
+        reg.receiptNo || 'N/A',
+        reg.status,
+        reg.paymentStatus,
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `btth-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    } catch (error) {
+      console.error('Failed to export CSV:', error);
+    }
   };
 
-  const exportToExcel = () => {
-    const headers = ['Reg ID', 'Receipt No', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
-    const rows = registrations.map((reg: any) => [
-      reg.registrationId || 'N/A',
-      reg.receiptNo || 'N/A',
-      reg.studentName,
-      new Date(reg.createdAt).toLocaleString('en-IN'),
-      `Class ${reg.currentClass}`,
-      reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
-      reg.schoolName,
-      reg.parentMobile,
-      reg.email || '',
-      new Date(reg.examDate).toLocaleDateString('en-IN'),
-      reg.referralSource,
-      reg.status,
-      reg.paymentStatus,
+  const exportToExcel = async () => {
+    try {
+      const params = new URLSearchParams();
+      const shouldApplyFilter = (value: string) => value && value !== 'all';
+
+      if (shouldApplyFilter(classFilter)) params.append('class', classFilter);
+      if (shouldApplyFilter(dateFilter)) params.append('examDate', dateFilter);
+      if (shouldApplyFilter(statusFilter)) params.append('status', statusFilter);
+      if (globalFilter) params.append('search', globalFilter);
+
+      // Fetch all data for export
+      params.append('page', '1');
+      params.append('limit', '10000'); // Large number to get all records
+
+      if (sorting.length > 0) {
+        const sort = sorting[0];
+        params.append('sortBy', sort.id);
+        params.append('sortOrder', sort.desc ? 'desc' : 'asc');
+      }
+
+      const response = await axiosInstance.get(`/registrations/list?${params.toString()}`);
+      const allRegistrations = response.data.data as Registration[];
+
+      const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Receipt No', 'Status', 'Payment'];
+      const rows = allRegistrations.map((reg: any) => [
+        reg.registrationId || 'N/A',
+        reg.studentName,
+        new Date(reg.createdAt).toLocaleString('en-IN'),
+        `Class ${reg.currentClass}`,
+        reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
+        reg.schoolName,
+        reg.parentMobile,
+        reg.email || '',
+        new Date(reg.examDate).toLocaleDateString('en-IN'),
+        reg.referralSource,
+        reg.receiptNo || 'N/A',
+        reg.status,
+        reg.paymentStatus,
     ]);
 
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
 
-    const fileName = `btth-registrations-${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+      const fileName = `btth-registrations-${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (error) {
+      console.error('Failed to export Excel:', error);
+    }
   };
 
   if (!isLoaded || !isSignedIn) {
@@ -802,6 +877,44 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+          {selectedRowIds.length > 0 && (
+            <div className="flex items-center justify-between py-2 px-3 bg-blue-50 rounded-md mb-3">
+              <span className="text-sm text-blue-800 font-medium">
+                {selectedRowIds.length} row{selectedRowIds.length > 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const allFilteredRowIds = table.getFilteredRowModel().rows.map(row => row.original._id);
+                    setSelectedRowIds(allFilteredRowIds);
+                  }}
+                  className="h-7 text-xs"
+                >
+                  Select All ({table.getFilteredRowModel().rows.length})
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedRowIds([])}
+                  className="h-7 text-xs"
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={!selectedRowIds.length || loading}
+                  className="h-7 text-xs"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
@@ -809,75 +922,122 @@ export default function AdminPage() {
             </div>
           ) : (
             <>
-                <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </TableCell>
+                <div className="rounded-md border overflow-hidden" style={{ minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)', height: 'calc(100vh - 300px)' }}>
+                  <Table containerClassName="h-full" className="min-w-max">
+                    {/* Fixed Header */}
+                    <TableHeader className="bg-white">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead key={header.id} className="sticky top-0 z-30 bg-white shadow-sm">
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                            </TableHead>
                           ))}
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={columns.length}
-                          className="h-24 text-center"
-                        >
-                          No registrations found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                      ))}
+                    </TableHeader>
+
+                    {/* Scrollable Body */}
+                    <TableBody>
+                      {table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow key={row.id}>
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={columns.length} className="h-24 text-center">
+                            No registrations found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3">
                   <div className="text-xs text-zinc-600">
-                  Showing {table.getRowModel().rows.length} of {registrations.length} registrations
+                    Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
+                    {Math.min(
+                      (pagination.pageIndex + 1) * pagination.pageSize,
+                      totalCount
+                    )}{' '}
+                    of {totalCount} entries
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Select
+                      value={`${pagination.pageSize}`}
+                      onValueChange={(value) => {
+                        setPagination((prev) => ({ ...prev, pageSize: Number(value), pageIndex: 0 }));
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue placeholder={pagination.pageSize} />
+                      </SelectTrigger>
+                      <SelectContent side="top">
+                        {[10, 20, 30, 40, 50].map((pageSize) => (
+                          <SelectItem key={pageSize} value={`${pageSize}`}>
+                            {pageSize}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination((prev) => ({ ...prev, pageIndex: 0 }))}
+                        disabled={pagination.pageIndex === 0}
+                        className="h-8 w-8 p-0"
+                      >
+                        {'<<'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination((prev) => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
+                        disabled={pagination.pageIndex === 0}
+                        className="h-8 w-8 p-0"
+                      >
+                        {'<'}
+                      </Button>
+                      <div className="flex items-center justify-center text-sm font-medium min-w-[80px]">
+                        Page {pagination.pageIndex + 1} of {Math.ceil(totalCount / pagination.pageSize)}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination((prev) => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                        disabled={pagination.pageIndex >= Math.ceil(totalCount / pagination.pageSize) - 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        {'>'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination((prev) => ({ ...prev, pageIndex: Math.ceil(totalCount / pagination.pageSize) - 1 }))}
+                        disabled={pagination.pageIndex >= Math.ceil(totalCount / pagination.pageSize) - 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        {'>>'}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
             </>
           )}
         </div>

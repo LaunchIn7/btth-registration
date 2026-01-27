@@ -243,5 +243,5 @@ export const downloadRegistrationReceipt = (
     yPos += 6;
   });
 
-  doc.save(filename ?? `BTTH-Receipt-${registration._id}.pdf`);
+  doc.save(filename ?? `BTTH-Receipt-${registration.receiptNo || registration._id}.pdf`);
 };

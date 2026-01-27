@@ -10,9 +10,12 @@ export async function POST() {
     const registrationsCollection = db.collection('registrations');
     const countersCollection = db.collection('counters');
 
-    // Get all registrations without receiptNo, sorted by creation date
+    // Get all paid registrations without receiptNo, sorted by creation date
     const registrations = await registrationsCollection
-      .find({ receiptNo: { $exists: false } })
+      .find({
+        receiptNo: { $exists: false },
+        paymentStatus: 'paid'
+      })
       .sort({ createdAt: 1 })
       .toArray();
 

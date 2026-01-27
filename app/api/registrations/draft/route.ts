@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { generateRegistrationId } from '@/lib/registration-id';
-import { generateReceiptNumber } from '@/lib/receipt-number';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,12 +12,10 @@ export async function POST(request: NextRequest) {
 
     const examType = body.examType || 'regular';
     const registrationId = await generateRegistrationId(examType, 'draft');
-    const receiptNo = await generateReceiptNumber();
 
     const registration = {
       ...body,
       registrationId,
-      receiptNo,
       status: 'draft',
       paymentStatus: 'pending',
       examType,
@@ -33,7 +30,6 @@ export async function POST(request: NextRequest) {
       success: true,
       registrationId: result.insertedId.toString(),
       regId: registrationId,
-      receiptNo,
     });
   } catch (error) {
     console.error('Draft registration error:', error);
