@@ -2,12 +2,15 @@ import { jsPDF } from 'jspdf';
 
 export type RegistrationReceiptData = {
   _id: string;
+  registrationId?: string;
+  receiptNo?: string;
   studentName: string;
   currentClass: string;
   schoolName: string;
   parentMobile: string;
   email?: string;
   examDate: string;
+  createdAt?: string;
   paymentStatus?: string;
   paymentId?: string;
   razorpayPaymentId?: string;
@@ -40,33 +43,47 @@ export const downloadRegistrationReceipt = (
   let yPos = 20;
 
   doc.setFillColor(51, 59, 98);
-  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.rect(0, 0, pageWidth, 50, 'F');
 
+  // Add header text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('BTTH 2.0', pageWidth / 2, 20, { align: 'center' });
+  doc.text('Bakliwal Tutorials Pvt Ltd', pageWidth / 2, 20, { align: 'center' });
 
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('Registration Receipt', pageWidth / 2, 30, { align: 'center' });
+  doc.text('BTTH 2.0 Registration Receipt', pageWidth / 2, 35, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
-  yPos = 55;
+  yPos = 65;
 
   doc.setFontSize(10);
-  doc.text(`Registration ID: ${registration._id}`, 20, yPos);
+  doc.text(`Reg Id: ${registration.registrationId || registration._id}`, 20, yPos);
   doc.text(
-    `Date: ${new Date().toLocaleDateString('en-IN', {
+    `Date: ${registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    }) : new Date().toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata'
     })}`,
     pageWidth - 20,
     yPos,
     { align: 'right' }
   );
-  yPos += 15;
+  yPos += 10;
+
+  if (registration.receiptNo) {
+    doc.text(`Receipt No: ${registration.receiptNo}`, 20, yPos);
+    yPos += 10;
+  } else {
+    yPos += 5;
+  }
 
   doc.setFillColor(51, 59, 98);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
@@ -225,22 +242,6 @@ export const downloadRegistrationReceipt = (
     doc.text(instruction, 25, yPos);
     yPos += 6;
   });
-
-  yPos = doc.internal.pageSize.getHeight() - 30;
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, yPos, pageWidth - 20, yPos);
-  yPos += 7;
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Bakliwal Tutorials Navi Mumbai', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
-  doc.setFont('helvetica', 'normal');
-  doc.text('For queries: info@bakliwaltutorials.com', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Thank you for registering for BTTH 2.0!', pageWidth / 2, yPos, { align: 'center' });
 
   doc.save(filename ?? `BTTH-Receipt-${registration._id}.pdf`);
 };

@@ -52,6 +52,7 @@ const CACHE_TTL_MS = 60 * 1000;
 type Registration = {
   _id: string;
   registrationId?: string;
+  receiptNo?: string;
   studentName: string;
   currentClass: string;
   schoolName: string;
@@ -381,6 +382,20 @@ export default function AdminPage() {
       },
     },
     {
+      accessorKey: 'receiptNo',
+      header: 'Receipt No',
+      cell: ({ row }: any) => {
+        const receiptNo = row.getValue('receiptNo');
+        return receiptNo ? (
+          <span className="font-mono text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
+            {receiptNo}
+          </span>
+        ) : (
+          <span className="text-[10px] text-zinc-400 whitespace-nowrap">N/A</span>
+        );
+      },
+    },
+    {
       accessorKey: 'email',
       header: 'Email',
       cell: ({ row }: any) => {
@@ -608,9 +623,10 @@ export default function AdminPage() {
   });
 
   const exportToCSV = () => {
-    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Receipt No', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
       reg.registrationId || 'N/A',
+      reg.receiptNo || 'N/A',
       reg.studentName,
       new Date(reg.createdAt).toLocaleString('en-IN'),
       `Class ${reg.currentClass}`,
@@ -638,9 +654,10 @@ export default function AdminPage() {
   };
 
   const exportToExcel = () => {
-    const headers = ['Reg ID', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
+    const headers = ['Reg ID', 'Receipt No', 'Student Name', 'Registered On', 'Class', 'Exam Type', 'School', 'Contact', 'Email', 'Exam Date', 'Source', 'Status', 'Payment'];
     const rows = registrations.map((reg: any) => [
       reg.registrationId || 'N/A',
+      reg.receiptNo || 'N/A',
       reg.studentName,
       new Date(reg.createdAt).toLocaleString('en-IN'),
       `Class ${reg.currentClass}`,
@@ -880,6 +897,12 @@ export default function AdminPage() {
                 <p className="text-sm text-zinc-500">Registration ID</p>
                 <p className="font-mono font-bold text-blue-700">{previewRegistration.registrationId || previewRegistration._id}</p>
               </div>
+              {previewRegistration.receiptNo && (
+                <div>
+                  <p className="text-sm text-zinc-500">Receipt No</p>
+                  <p className="font-mono font-bold text-green-700">{previewRegistration.receiptNo}</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-zinc-500">Student Name</p>
