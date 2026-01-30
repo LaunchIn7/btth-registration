@@ -430,9 +430,14 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent className="h-[320px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dropoffsVsPaidByClass} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <BarChart data={dropoffsVsPaidByClass} margin={{ top: 10, right: 20, left: 0, bottom: 12 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="currentClass" tick={{ fontSize: 12 }} />
+                        <XAxis
+                          dataKey="currentClass"
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => `Class ${value}`}
+                          label={{ value: 'Class', position: 'insideBottom', offset: -4, fontSize: 12 }}
+                        />
                       <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                       <Tooltip />
                       <Legend />
