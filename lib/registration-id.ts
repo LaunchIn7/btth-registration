@@ -1,4 +1,5 @@
 import clientPromise from './mongodb';
+import { ModifyResult, ReturnDocument } from 'mongodb';
 
 /**
  * Registration ID Format: BTNM-{ExamType}-{Status}-{Number}
@@ -43,13 +44,16 @@ async function getNextSequence(): Promise<number> {
   const db = client.db('btth_registration');
   const countersCollection = db.collection<{ _id: string; sequence: number }>('counters');
 
-  const result = await countersCollection.findOneAndUpdate(
+  const result: ModifyResult<{ _id: string; sequence: number }> = await countersCollection.findOneAndUpdate(
     { _id: 'registrationId' },
-    { $inc: { sequence: 1 } },
-    { upsert: true, returnDocument: 'after' }
+    {
+      $setOnInsert: { sequence: 0 },
+      $inc: { sequence: 1 },
+    },
+    { upsert: true, returnDocument: ReturnDocument.AFTER, includeResultMetadata: true }
   );
 
-  return result?.sequence || 1;
+  return (result?.value?.sequence ?? 1);
 }
 
 /**

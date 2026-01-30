@@ -1,15 +1,14 @@
-import { Collection, Db, ObjectId } from 'mongodb';
+import { Collection, Db, ReturnDocument } from 'mongodb';
+import clientPromise from '@/lib/mongodb';
+import { parseRegistrationId } from '@/lib/registration-id';
 
-let client: any;
 let db: Db;
 let registrationsCollection: Collection;
 let countersCollection: Collection;
 
 const initCollections = async () => {
   if (!db) {
-    const { MongoClient } = await import('mongodb');
-    const clientPromise = new MongoClient(process.env.MONGODB_URI!).connect();
-    client = await clientPromise;
+    const client = await clientPromise;
     db = client.db('btth_registration');
     registrationsCollection = db.collection('registrations');
     countersCollection = db.collection('counters');
@@ -24,15 +23,35 @@ const initCollections = async () => {
 export async function generateReceiptNumber(): Promise<string> {
   const { countersCollection } = await initCollections();
 
-  const result = await countersCollection.findOneAndUpdate(
-    { _id: 'receiptNumber' as any },
-    { $inc: { sequence: 1 } },
-    { upsert: true, returnDocument: 'after' }
-  );
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const result = await countersCollection.findOneAndUpdate(
+      { _id: 'receiptNumber' as any },
+      {
+        $setOnInsert: { sequence: 0 },
+        $inc: { sequence: 1 },
+      },
+      {
+        upsert: true,
+        returnDocument: ReturnDocument.AFTER,
+      }
+    );
 
-  const sequence = result?.value?.sequence || 1;
-  const paddedNumber = sequence.toString().padStart(4, '0');
+    const sequence = (result && result.value && typeof (result.value as any).sequence === 'number')
+      ? (result.value as any).sequence
+      : undefined;
 
+    if (typeof sequence === 'number') {
+      const paddedNumber = sequence.toString().padStart(4, '0');
+      return `btnmrzp${paddedNumber}`;
+    }
+  }
+
+  throw new Error('Failed to generate receipt number');
+}
+
+export function receiptNumberFromRegistrationId(registrationId: string): string {
+  const { sequence } = parseRegistrationId(registrationId);
+  const paddedNumber = sequence.toString().padStart(5, '0');
   return `btnmrzp${paddedNumber}`;
 }
 

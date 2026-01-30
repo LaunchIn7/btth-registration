@@ -188,7 +188,12 @@ function RegisterPageContent() {
             router.push(`/registration-success?${successParams.toString()}`);
           } catch (error) {
             console.error('Payment verification failed:', error);
-            alert('Payment verification failed. Please contact support.');
+            const successParams = new URLSearchParams({
+              id: registrationId,
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+            });
+            router.push(`/registration-success?${successParams.toString()}`);
           }
         },
         prefill: {
