@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import { getCurrentReceiptSequence } from '@/lib/receipt-number';
+import { generateReceiptNumber, receiptNumberFromRegistrationId } from '@/lib/receipt-number';
 
 export async function POST() {
   try {
@@ -10,11 +9,61 @@ export async function POST() {
     const registrationsCollection = db.collection('registrations');
     const countersCollection = db.collection('counters');
 
-    // Get all paid registrations without receiptNo, sorted by creation date
+    const duplicateReceiptGroups = await registrationsCollection
+      .aggregate([
+        { $match: { receiptNo: { $exists: true, $type: 'string', $ne: '' } } },
+        {
+          $group: {
+            _id: '$receiptNo',
+            count: { $sum: 1 },
+            docs: { $push: { _id: '$_id', createdAt: '$createdAt' } },
+          },
+        },
+        { $match: { count: { $gt: 1 } } },
+      ])
+      .toArray();
+
+    let clearedDuplicates = 0;
+    for (const group of duplicateReceiptGroups) {
+      const docs = Array.isArray(group?.docs) ? group.docs : [];
+      docs.sort((a: any, b: any) => {
+        const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aTime - bTime;
+      });
+
+      const toClear = docs.slice(1).map((d: any) => d._id).filter(Boolean);
+      if (toClear.length > 0) {
+        const result = await registrationsCollection.updateMany(
+          { _id: { $in: toClear } },
+          { $unset: { receiptNo: '' } }
+        );
+        clearedDuplicates += result.modifiedCount;
+      }
+    }
+
+    let maxSequence = 0;
+    const cursor = registrationsCollection
+      .find({ receiptNo: { $exists: true, $type: 'string', $ne: '' } }, { projection: { receiptNo: 1 } });
+    for await (const doc of cursor as any) {
+      const receiptNo = doc?.receiptNo;
+      if (typeof receiptNo !== 'string') continue;
+      const match = /^btnmrzp(\d+)$/.exec(receiptNo);
+      if (!match) continue;
+      const seq = Number.parseInt(match[1], 10);
+      if (Number.isFinite(seq) && seq > maxSequence) maxSequence = seq;
+    }
+
+    await countersCollection.updateOne(
+      { _id: 'receiptNumber' as any },
+      { $set: { sequence: maxSequence } },
+      { upsert: true }
+    );
+
     const registrations = await registrationsCollection
       .find({
         receiptNo: { $exists: false },
-        paymentStatus: 'paid'
+        paymentStatus: 'paid',
       })
       .sort({ createdAt: 1 })
       .toArray();
@@ -27,41 +76,47 @@ export async function POST() {
       });
     }
 
-    // Get current sequence or start from 1
-    const currentSequence = await getCurrentReceiptSequence();
-    let startSequence = currentSequence + 1;
-
-    // Generate receipt numbers for each registration
     const updatedRegistrations = [];
     for (const registration of registrations) {
-      const paddedNumber = startSequence.toString().padStart(4, '0');
-      const receiptNo = `btnmrzp${paddedNumber}`;
+      let receiptNo: string;
+      if (typeof registration?.registrationId === 'string' && registration.registrationId) {
+        try {
+          receiptNo = receiptNumberFromRegistrationId(registration.registrationId);
+        } catch (_err) {
+          receiptNo = await generateReceiptNumber();
+        }
+      } else {
+        receiptNo = await generateReceiptNumber();
+      }
 
-      await registrationsCollection.updateOne(
-        { _id: registration._id },
+      const updateResult = await registrationsCollection.updateOne(
+        { _id: registration._id, receiptNo: { $exists: false } },
         { $set: { receiptNo } }
       );
 
-      updatedRegistrations.push({
-        _id: registration._id,
-        registrationId: registration.registrationId || 'N/A',
-        receiptNo,
-      });
-
-      startSequence++;
+      if (updateResult.modifiedCount > 0) {
+        updatedRegistrations.push({
+          _id: registration._id,
+          registrationId: registration.registrationId || 'N/A',
+          receiptNo,
+        });
+      }
     }
 
-    // Update the counter to the final sequence number
-    await countersCollection.updateOne(
-      { _id: 'receiptNumber' as any },
-      { $set: { sequence: startSequence - 1 } },
-      { upsert: true }
-    );
+    try {
+      await registrationsCollection.createIndex(
+        { receiptNo: 1 },
+        { unique: true, sparse: true, name: 'receiptNo_unique' }
+      );
+    } catch (error) {
+      console.error('Failed to create receiptNo unique index:', error);
+    }
 
     return NextResponse.json({
       success: true,
       message: `Successfully assigned receipt numbers to ${updatedRegistrations.length} registrations`,
       updated: updatedRegistrations.length,
+      clearedDuplicates,
       registrations: updatedRegistrations,
     });
   } catch (error) {

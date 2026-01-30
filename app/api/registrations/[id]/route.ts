@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { auth } from '@clerk/nextjs/server';
 import { updateRegistrationIdStatus } from '@/lib/registration-id';
+import { generateReceiptNumber, receiptNumberFromRegistrationId } from '@/lib/receipt-number';
 
 export async function GET(
   request: NextRequest,
@@ -97,12 +98,31 @@ export async function PATCH(
       update.status = 'completed';
       update.paymentStatus = nextPaymentStatus === 'paid' ? 'paid' : (existing.paymentStatus ?? 'paid');
 
-      if (typeof existing.registrationId === 'string' && existing.registrationId) {
+      const updatedRegId = (typeof existing.registrationId === 'string' && existing.registrationId)
+        ? (() => {
+          try {
+            return updateRegistrationIdStatus(existing.registrationId, 'completed');
+          } catch (_err) {
+            return undefined;
+          }
+        })()
+        : undefined;
+
+      if (update.paymentStatus === 'paid' && !existing.receiptNo) {
         try {
-          update.registrationId = updateRegistrationIdStatus(existing.registrationId, 'completed');
+          const regIdForReceipt = (updatedRegId || existing.registrationId) as string | undefined;
+          if (regIdForReceipt) {
+            update.receiptNo = receiptNumberFromRegistrationId(regIdForReceipt);
+          } else {
+            update.receiptNo = await generateReceiptNumber();
+          }
         } catch (_err) {
           // ignore
         }
+      }
+
+      if (updatedRegId) {
+        update.registrationId = updatedRegId;
       }
     }
 

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { updateRegistrationIdStatus } from '@/lib/registration-id';
-import { generateReceiptNumber } from '@/lib/receipt-number';
+import { generateReceiptNumber, receiptNumberFromRegistrationId } from '@/lib/receipt-number';
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +64,15 @@ export async function POST(request: NextRequest) {
         : null;
 
     if (!registration) {
-      return NextResponse.json({ success: true });
+      console.error('Webhook: registration not found', {
+        registrationId,
+        orderId,
+        eventType,
+      });
+      return NextResponse.json(
+        { success: false, error: 'Registration not found' },
+        { status: 500 }
+      );
     }
 
     if (registration.paymentStatus === 'paid') {
@@ -75,16 +83,28 @@ export async function POST(request: NextRequest) {
       ? updateRegistrationIdStatus(registration.registrationId, 'completed')
       : undefined;
 
-    // Generate receipt number only for paid registrations
-    const receiptNo = await generateReceiptNumber();
+    let receiptNo = registration.receiptNo as string | undefined;
+    if (!receiptNo) {
+      const regIdForReceipt = (updatedRegId || registration.registrationId) as string | undefined;
+      if (regIdForReceipt) {
+        try {
+          receiptNo = receiptNumberFromRegistrationId(regIdForReceipt);
+        } catch (_err) {
+          // ignore
+        }
+      }
+    }
+    if (!receiptNo) {
+      receiptNo = await generateReceiptNumber();
+    }
 
     await collection.updateOne(
-      { _id: registration._id },
+      { _id: registration._id, paymentStatus: { $ne: 'paid' } },
       {
         $set: {
           status: 'completed',
           paymentStatus: 'paid',
-          receiptNo,
+          ...(!registration.receiptNo && { receiptNo }),
           ...(paymentId && { paymentId }),
           ...(orderId && { orderId }),
           ...(updatedRegId && { registrationId: updatedRegId }),

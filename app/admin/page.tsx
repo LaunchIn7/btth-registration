@@ -85,6 +85,7 @@ export default function AdminPage() {
   const { redirectToSignIn } = useClerk();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reconciling, setReconciling] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -205,6 +206,42 @@ export default function AdminPage() {
       console.error('Failed to fetch registrations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reconcilePayment = async () => {
+    if (!editRegistration) return;
+
+    try {
+      setReconciling(true);
+      setErrorMessage(null);
+
+      await axiosInstance.post('/payment/reconcile', {
+        registrationId: editRegistration._id,
+      });
+
+      const refreshed = await axiosInstance.get(`/registrations/${editRegistration._id}`);
+      const refreshedRegistration = refreshed.data as Registration;
+
+      setEditRegistration(refreshedRegistration);
+      setEditForm((prev) => ({
+        ...prev,
+        status: refreshedRegistration.status,
+        paymentStatus: refreshedRegistration.paymentStatus,
+        paymentId:
+          refreshedRegistration.paymentId ||
+          refreshedRegistration.razorpayPaymentId ||
+          refreshedRegistration.razorpay_payment_id,
+        orderId: refreshedRegistration.orderId || refreshedRegistration.razorpay_order_id,
+      }));
+
+      cacheRef.current.clear();
+      await fetchRegistrations(false);
+    } catch (error) {
+      console.error('Failed to reconcile payment:', error);
+      setErrorMessage('Failed to reconcile payment. Please try again.');
+    } finally {
+      setReconciling(false);
     }
   };
 
@@ -1252,6 +1289,15 @@ export default function AdminPage() {
           <DialogFooter>
             {errorMessage && (
               <p className="text-sm text-red-600 mr-auto">{errorMessage}</p>
+            )}
+            {editRegistration && editForm.paymentStatus !== 'paid' && (editForm.orderId || editRegistration.orderId) && (
+              <Button
+                variant="secondary"
+                onClick={reconcilePayment}
+                disabled={loading || reconciling}
+              >
+                {reconciling ? 'Reconciling...' : 'Reconcile Payment'}
+              </Button>
             )}
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={loading}>
               Cancel

@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     const options = {
       amount: amount,
       currency: 'INR',
+      payment_capture: 1,
       receipt: `receipt_${registrationId}`,
       notes: {
         registrationId,
