@@ -14,7 +14,7 @@ import {
   ColumnDef,
   PaginationState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Download, Eye, FileSpreadsheet, Pencil, RefreshCcw, Search, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Download, Eye, FileSpreadsheet, Pencil, RefreshCcw, Search, Trash2, CheckCircle, Hourglass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -581,15 +581,21 @@ export default function AdminPage() {
       header: 'Status',
       cell: ({ row }: any) => {
         const status = row.getValue('status');
+        const isCompleted = status === 'completed';
         return (
-          <span
-            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${status === 'completed'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-yellow-100 text-yellow-800'
-              }`}
-          >
-            {status}
-          </span>
+          <div className="flex items-center justify-center group relative">
+            <div className="relative">
+              {isCompleted ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <Hourglass className="h-4 w-4 text-yellow-600" />
+              )}
+            </div>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+              {status}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+            </div>
+          </div>
         );
       },
     },
@@ -598,17 +604,19 @@ export default function AdminPage() {
       header: 'Payment Status',
       cell: ({ row }: any) => {
         const status = row.getValue('paymentStatus');
+        const isPaid = status === 'paid';
         return (
-          <span
-            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${status === 'paid'
-              ? 'bg-green-100 text-green-800'
-              : status === 'pending'
-                ? 'bg-yellow-100 text-yellow-800'
-              : 'bg-red-100 text-red-800'
-              }`}
-          >
-            {status}
-          </span>
+          <div className="flex items-center justify-center group relative">
+            <div className="relative">
+              <CheckCircle
+                className={`h-4 w-4 ${isPaid ? 'text-green-600' : 'text-gray-400'}`}
+              />
+            </div>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+              {status}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+            </div>
+          </div>
         );
       },
     },
