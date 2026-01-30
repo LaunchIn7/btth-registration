@@ -8,6 +8,7 @@ export function AdminNav() {
 
   const navItems = [
     { href: "/admin", label: "Registrations" },
+    { href: "/admin/analytics", label: "Analytics" },
     { href: "/admin/config", label: "Config" },
   ];
 

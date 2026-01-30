@@ -139,4 +139,24 @@ table td {
 table tr {
   @apply leading-tight;
 }
+
+  input[type='date'] {
+    position: relative;
+    padding-right: 2.25rem;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 0.75rem;
+    margin: 0;
+    padding: 0;
+    height: 1.1rem;
+    width: 1.1rem;
+    cursor: pointer;
+  }
+
+  input[type='date']::-webkit-inner-spin-button,
+  input[type='date']::-webkit-clear-button {
+    display: none;
+  }
 }
