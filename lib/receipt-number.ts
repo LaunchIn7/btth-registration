@@ -27,7 +27,6 @@ export async function generateReceiptNumber(): Promise<string> {
     const result = await countersCollection.findOneAndUpdate(
       { _id: 'receiptNumber' as any },
       {
-        $setOnInsert: { sequence: 0 },
         $inc: { sequence: 1 },
       },
       {

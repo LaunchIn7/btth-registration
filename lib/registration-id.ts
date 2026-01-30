@@ -47,7 +47,6 @@ async function getNextSequence(): Promise<number> {
   const result: ModifyResult<{ _id: string; sequence: number }> = await countersCollection.findOneAndUpdate(
     { _id: 'registrationId' },
     {
-      $setOnInsert: { sequence: 0 },
       $inc: { sequence: 1 },
     },
     { upsert: true, returnDocument: ReturnDocument.AFTER, includeResultMetadata: true }
