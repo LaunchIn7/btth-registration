@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Plus, Trash2, Save, Calendar, DollarSign } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { Loader2, Plus, Trash2, Save, Calendar as CalendarIcon, DollarSign } from 'lucide-react';
 import { ExamDate, PricingConfig, ExamConfiguration } from '@/lib/types/exam-config';
 import axiosInstance from '@/lib/axios';
 import { useRouter } from 'next/navigation';
@@ -21,6 +24,16 @@ export default function ConfigPage() {
   const [examDates, setExamDates] = useState<ExamDate[]>([]);
   const [pricing, setPricing] = useState<PricingConfig>({ foundation: 200, regular: 500 });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const parseDateValue = (value?: string | null) => {
+    if (!value) return undefined;
+    return new Date(`${value}T00:00:00`);
+  };
+
+  const formatDisplayDate = (value?: string | null) => {
+    const parsed = parseDateValue(value || undefined);
+    return parsed ? format(parsed, 'dd MMM yyyy') : '';
+  };
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -139,7 +152,7 @@ export default function ConfigPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                    <CalendarIcon className="h-5 w-5" />
                   Exam Dates
                 </CardTitle>
                 <CardDescription>
@@ -173,14 +186,34 @@ export default function ConfigPage() {
                       </div>
 
                       <div>
-                        <Label htmlFor={`value-${index}`}>Date (YYYY-MM-DD)</Label>
-                        <Input
-                          id={`value-${index}`}
-                          type="date"
-                          value={date.value}
-                          onChange={(e) => updateExamDate(index, 'value', e.target.value)}
-                          className='mt-2'
-                        />
+                        <Label htmlFor={`value-${index}`}>Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id={`value-${index}`}
+                              variant="outline"
+                              className="mt-2 w-full justify-start text-left font-normal"
+                              disabled={saving}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4 text-zinc-500" />
+                              {date.value ? formatDisplayDate(date.value) : 'Pick a date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseDateValue(date.value)}
+                              onSelect={(value) => {
+                                if (!value) return;
+                                const y = value.getFullYear();
+                                const m = `${value.getMonth() + 1}`.padStart(2, '0');
+                                const d = `${value.getDate()}`.padStart(2, '0');
+                                updateExamDate(index, 'value', `${y}-${m}-${d}`);
+                              }}
+                              disabled={saving}
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <div>
