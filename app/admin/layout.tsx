@@ -1,4 +1,5 @@
 import { AdminNav } from "@/components/admin/admin-nav";
+import { FutureDatesAlert } from "@/components/admin/future-dates-alert";
 
 export default function AdminLayout({
   children,
@@ -8,7 +9,10 @@ export default function AdminLayout({
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
       <AdminNav />
-      <main className="flex-1 overflow-hidden w-full">{children}</main>
+      <main className="flex-1 overflow-hidden w-full bg-linear-to-b from-white to-blue-50">
+        <FutureDatesAlert />
+        {children}
+      </main>
     </div>
   );
 }

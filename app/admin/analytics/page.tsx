@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import axiosInstance from '@/lib/axios';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Bar,
@@ -70,6 +72,16 @@ function toDateInputValue(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
+function parseDateValue(value?: string | null) {
+  if (!value) return undefined;
+  return new Date(`${value}T00:00:00`);
+}
+
+function formatDisplayDate(value?: string | null) {
+  const parsed = parseDateValue(value || undefined);
+  return parsed ? format(parsed, 'dd MMM yyyy') : '';
+}
+
 const pieColors = ['#2563EB', '#7C3AED', '#16A34A', '#F59E0B', '#EF4444'];
 
 function formatCompactNumber(value: number) {
@@ -110,8 +122,10 @@ export default function AdminAnalyticsPage() {
   const [endDate, setEndDate] = useState(() => toDateInputValue(defaultEnd));
 
   const rangeDays = useMemo(() => {
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    const rangeStart = data?.range?.start ?? startDate;
+    const rangeEnd = data?.range?.end ?? endDate;
+    const start = rangeStart ? new Date(rangeStart) : null;
+    const end = rangeEnd ? new Date(rangeEnd) : null;
     if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       return Math.max(1, data?.timeseries?.dailyRegistrations?.length ?? 1);
     }
@@ -135,23 +149,28 @@ export default function AdminAnalyticsPage() {
   );
   const [activeQuickRange, setActiveQuickRange] = useState<string | null>('1M');
 
-  const applyQuickRange = (label: string, days: number) => {
+  const applyQuickRange = async (label: string, days: number) => {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - (days - 1));
-    setStartDate(toDateInputValue(start));
-    setEndDate(toDateInputValue(end));
+    const startValue = toDateInputValue(start);
+    const endValue = toDateInputValue(end);
+    setStartDate(startValue);
+    setEndDate(endValue);
     setActiveQuickRange(label);
+    await fetchAnalytics({ start: startValue, end: endValue });
   };
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (override?: { start?: string; end?: string }) => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
       const params = new URLSearchParams();
-      if (startDate) params.set('start', startDate);
-      if (endDate) params.set('end', endDate);
+      const queryStart = override?.start ?? startDate;
+      const queryEnd = override?.end ?? endDate;
+      if (queryStart) params.set('start', queryStart);
+      if (queryEnd) params.set('end', queryEnd);
 
       const response = await axiosInstance.get(`/admin/analytics?${params.toString()}`);
       setData(response.data as AnalyticsResponse);
@@ -267,50 +286,87 @@ export default function AdminAnalyticsPage() {
             <CardTitle className="text-base">Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {quickRanges.map((r) => (
-                  <Button
-                    key={r.label}
-                    type="button"
-                    variant={activeQuickRange === r.label ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-8"
-                    onClick={() => applyQuickRange(r.label, r.days)}
-                  >
-                    {r.label}
-                  </Button>
-                ))}
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="text-xs font-medium text-zinc-500 mb-2">Quick ranges (auto-apply)</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {quickRanges.map((r) => (
+                    <Button
+                      key={r.label}
+                      type="button"
+                      variant={activeQuickRange === r.label ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8"
+                      onClick={() => applyQuickRange(r.label, r.days)}
+                      disabled={loading}
+                    >
+                      {r.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-col md:flex-row md:items-end gap-3">
-                <div className="w-full md:w-[140px]">
-                  <div className="text-xs text-zinc-500 mb-1">Start</div>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      setActiveQuickRange(null);
-                    }}
-                    className="h-9"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                <div>
+                  <div className="text-xs font-medium text-zinc-500 mb-1">Start date</div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-9"
+                        disabled={loading}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-zinc-500" />
+                        {startDate ? formatDisplayDate(startDate) : 'Pick a start date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseDateValue(startDate)}
+                        onSelect={(value) => {
+                          if (!value) return;
+                          setStartDate(toDateInputValue(value));
+                          setActiveQuickRange(null);
+                        }}
+                        disabled={loading}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <div className="w-full md:w-[140px]">
-                  <div className="text-xs text-zinc-500 mb-1">End</div>
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setActiveQuickRange(null);
-                    }}
-                    className="h-9"
-                  />
+                <div>
+                  <div className="text-xs font-medium text-zinc-500 mb-1">End date</div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-9"
+                        disabled={loading}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-zinc-500" />
+                        {endDate ? formatDisplayDate(endDate) : 'Pick an end date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseDateValue(endDate)}
+                        onSelect={(value) => {
+                          if (!value) return;
+                          setEndDate(toDateInputValue(value));
+                          setActiveQuickRange(null);
+                        }}
+                        disabled={loading}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <Button onClick={fetchAnalytics} disabled={loading} className="h-9 md:ml-0">
+                <Button onClick={() => fetchAnalytics()} disabled={loading} className="h-9">
                   {loading ? 'Loading...' : 'Apply'}
                 </Button>
               </div>
+              <p className="text-xs text-zinc-500">
+                Pick a custom range and click apply to refresh the analytics.
+              </p>
             </div>
             {errorMessage && <p className="text-sm text-red-600 mt-3">{errorMessage}</p>}
           </CardContent>
