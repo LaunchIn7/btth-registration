@@ -40,6 +40,7 @@ export const downloadRegistrationReceipt = (
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   let yPos = 20;
 
   doc.setFillColor(51, 59, 98);
@@ -55,8 +56,11 @@ export const downloadRegistrationReceipt = (
   doc.setFont('helvetica', 'normal');
   doc.text('BTTH 2.0 Registration Receipt', pageWidth / 2, 35, { align: 'center' });
 
+  doc.setFontSize(10);
+  doc.text('GSTIN: 27AAHCB2378J1ZE', pageWidth / 2, 45, { align: 'center' });
+
   doc.setTextColor(0, 0, 0);
-  yPos = 65;
+  yPos = 60;
 
   doc.setFontSize(10);
   doc.text(`Registration Id: ${registration.registrationId || registration._id}`, 20, yPos);
@@ -110,10 +114,10 @@ export const downloadRegistrationReceipt = (
     doc.text(label, 25, yPos);
     doc.setFont('helvetica', 'normal');
     doc.text(value, 70, yPos);
-    yPos += 7;
+    yPos += 6;
   });
 
-  yPos += 5;
+  yPos += 3;
 
   doc.setFillColor(51, 59, 98);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
@@ -139,20 +143,11 @@ export const downloadRegistrationReceipt = (
     doc.text(label, 25, yPos);
     doc.setFont('helvetica', 'normal');
     doc.text(value, 70, yPos);
-    yPos += 7;
+    yPos += 6;
   });
 
-  yPos += 5;
+  yPos += 3;
 
-  doc.setFillColor(51, 59, 98);
-  doc.rect(20, yPos, pageWidth - 40, 8, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('PAYMENT DETAILS', 25, yPos + 5.5);
-  yPos += 13;
-
-  const paymentBoxTop = yPos;
   const isPaid = registration.paymentStatus === 'paid';
   const paymentId = registration.razorpay_payment_id || registration.razorpayPaymentId || registration.paymentId;
 
@@ -162,62 +157,61 @@ export const downloadRegistrationReceipt = (
   const feeLabel = isFoundation ? 'Registration Fee (Foundation)' : 'Registration Fee';
   const standardFeeLabel = isFoundation ? 'Standard Fee (Foundation)' : 'Standard Fee';
 
-  const paymentDetails = isPaid
-    ? [
-      { label: feeLabel, value: `INR ${feeAmount}` },
-      ...(paymentId ? [{ label: 'Payment ID', value: paymentId }] : []),
-    ]
-    : [
-      { label: standardFeeLabel, value: `INR ${feeAmount}` },
-      { label: 'Limited-time Discount', value: `- INR ${feeAmount}`, valueColor: [16, 122, 72] as [number, number, number] },
-    ];
-
-  const paymentBoxHeight = paymentDetails.length * 9 + 30;
-
-  doc.setDrawColor(211, 215, 234);
-  doc.setFillColor(245, 246, 251);
-  doc.roundedRect(20, paymentBoxTop, pageWidth - 40, paymentBoxHeight, 4, 4, 'FD');
-
-  yPos += 12;
-  doc.setFontSize(10);
-
-  paymentDetails.forEach(({ label, value, valueColor }) => {
-    doc.setTextColor(51, 59, 98);
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, 28, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(valueColor ? valueColor[0] : 29, valueColor ? valueColor[1] : 36, valueColor ? valueColor[2] : 65);
-    doc.text(value, pageWidth - 32, yPos, { align: 'right' });
-    yPos += 9;
-    doc.setTextColor(51, 59, 98);
-  });
-
-  const separatorY = yPos + 2;
-  doc.setDrawColor(226, 232, 240);
-  doc.line(28, separatorY, pageWidth - 28, separatorY);
-  yPos = separatorY + 8;
-
+  doc.setFillColor(51, 59, 98);
+  doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(51, 59, 98);
-  if (isPaid) {
-    doc.text('Payment Status', 28, yPos);
-    doc.setTextColor(16, 122, 72);
-    doc.text('PAID', pageWidth - 32, yPos, { align: 'right' });
-  } else {
-    doc.text('Amount Payable', 28, yPos);
-    doc.setFontSize(12);
-    doc.setTextColor(51, 59, 98);
-    doc.text('INR 0', pageWidth - 32, yPos, { align: 'right' });
-  }
+  doc.text('PAYMENT DETAILS', 25, yPos + 5.5);
+  yPos += 13;
 
-  yPos = paymentBoxTop + paymentBoxHeight + 10;
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
 
+  const paymentDetails = isPaid
+    ? [
+      { label: feeLabel, value: `INR ${feeAmount}` },
+      ...(paymentId ? [{ label: 'Payment ID', value: paymentId }] : []),
+      { label: 'Payment Status', value: 'PAID', valueColor: [16, 122, 72] as [number, number, number] },
+    ]
+    : [
+      { label: standardFeeLabel, value: `INR ${feeAmount}` },
+      { label: 'Limited-time Discount', value: `- INR ${feeAmount}`, valueColor: [16, 122, 72] as [number, number, number] },
+      { label: 'Amount Payable', value: 'INR 0' },
+    ];
+
+  paymentDetails.forEach(({ label, value, valueColor }) => {
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, 25, yPos);
+    doc.setFont('helvetica', 'normal');
+    if (valueColor) {
+      doc.setTextColor(valueColor[0], valueColor[1], valueColor[2]);
+    }
+    doc.text(value, 70, yPos);
+    doc.setTextColor(0, 0, 0);
+    yPos += 6;
+  });
+
+  yPos += 2;
+
+  const instructions = [
+    '• Please arrive 30 minutes before the exam time',
+    '• Bring a valid ID proof and this receipt (printed or digital)',
+    '• Carry your own stationery (pen, pencil, eraser, ruler)',
+    '• Mobile phones and electronic devices are not allowed in the exam hall',
+    '• Follow all instructions given by the exam invigilators',
+  ];
+
+  const instructionsHeight = instructions.length * 5 + 18;
+
+  if (yPos + instructionsHeight > pageHeight - 20) {
+    doc.addPage();
+    yPos = 20;
+  }
+
   doc.setFillColor(254, 243, 199);
-  doc.rect(20, yPos, pageWidth - 40, 45, 'F');
+  doc.rect(20, yPos, pageWidth - 40, instructionsHeight, 'F');
   doc.setFillColor(79, 70, 229);
   doc.rect(20, yPos, pageWidth - 40, 8, 'F');
   doc.setTextColor(255, 255, 255);
@@ -229,14 +223,6 @@ export const downloadRegistrationReceipt = (
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-
-  const instructions = [
-    '• Please arrive 30 minutes before the exam time',
-    '• Bring a valid ID proof and this receipt (printed or digital)',
-    '• Carry your own stationery (pen, pencil, eraser, ruler)',
-    '• Mobile phones and electronic devices are not allowed in the exam hall',
-    '• Follow all instructions given by the exam invigilators',
-  ];
 
   instructions.forEach((instruction) => {
     doc.text(instruction, 25, yPos);
