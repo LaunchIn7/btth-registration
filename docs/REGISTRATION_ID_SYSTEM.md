@@ -13,7 +13,7 @@ BTNM-{ExamType}-{Status}-{Number}
 1. **BTNM** - Fixed prefix for BTNaviMumbai
 2. **ExamType**:
    - `F` = Foundation (Classes 7, 8, 9)
-   - `C` = Comp28 (Classes 10, 11, 12)
+   - `C` = Comp29 (Classes 10, 11, 12)
 3. **Status**:
    - `D` = Draft (payment pending)
    - `C` = Completed (payment successful)
@@ -21,7 +21,7 @@ BTNM-{ExamType}-{Status}-{Number}
 
 ### Examples
 - `BTNM-F-D-00001` - Foundation course, Draft status, Registration #1
-- `BTNM-C-C-00019` - Comp28 course, Completed status, Registration #19
+- `BTNM-C-C-00019` - Comp29 course, Completed status, Registration #19
 - `BTNM-F-C-00042` - Foundation course, Completed status, Registration #42
 
 ## Implementation
@@ -114,7 +114,7 @@ Run the migration endpoint once to assign IDs to all existing registrations.
 
 1. **Easy Identification** - Account team can quickly identify registrations as BTNM
 2. **Status Tracking** - Status is visible in the ID itself (D vs C)
-3. **Exam Type** - Foundation vs Comp28 is immediately clear (F vs C)
+3. **Exam Type** - Foundation vs Comp29 is immediately clear (F vs C)
 4. **Sequential** - Numbers increment automatically, no duplicates
 5. **Human-Readable** - Easy to communicate over phone/email
 

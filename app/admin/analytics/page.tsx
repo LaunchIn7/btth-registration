@@ -229,7 +229,7 @@ export default function AdminAnalyticsPage() {
 
   const examTypeForLabel = (examType: string) => {
     if (examType === 'foundation') return 'Foundation';
-    if (examType === 'regular') return 'Comp28';
+    if (examType === 'regular') return 'Comp29';
     return examType || 'N/A';
   };
 
