@@ -507,7 +507,7 @@ export default function AdminPage() {
               : 'bg-blue-100 text-blue-800'
               }`}
           >
-            {examType === 'foundation' ? 'Foundation' : 'comp28'}
+            {examType === 'foundation' ? 'Foundation' : 'Comp29'}
           </span>
         );
       },
@@ -721,7 +721,7 @@ export default function AdminPage() {
         reg.studentName,
         new Date(reg.createdAt).toLocaleString('en-IN'),
         `Class ${reg.currentClass}`,
-        reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
+        reg.examType === 'foundation' ? 'Foundation' : 'Comp29',
         reg.schoolName,
         reg.parentMobile,
         reg.email || '',
@@ -777,7 +777,7 @@ export default function AdminPage() {
         reg.studentName,
         new Date(reg.createdAt).toLocaleString('en-IN'),
         `Class ${reg.currentClass}`,
-        reg.examType === 'foundation' ? 'Foundation' : 'Comp28',
+        reg.examType === 'foundation' ? 'Foundation' : 'Comp29',
         reg.schoolName,
         reg.parentMobile,
         reg.email || '',

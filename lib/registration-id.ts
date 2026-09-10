@@ -6,7 +6,7 @@ import { ModifyResult, ReturnDocument } from 'mongodb';
  * 
  * ExamType:
  * - F: Foundation (Classes 7-9)
- * - C: Comp28 (Classes 10-11)
+ * - C: Comp29 (Classes 10-11)
  * 
  * Status:
  * - D: Draft
@@ -16,7 +16,7 @@ import { ModifyResult, ReturnDocument } from 'mongodb';
  * 
  * Examples:
  * - BTNM-F-D-00001 (Foundation, Draft, #1)
- * - BTNM-C-C-00019 (Comp28, Completed, #19)
+ * - BTNM-C-C-00019 (Comp29, Completed, #19)
  */
 
 export type ExamType = 'foundation' | 'regular';

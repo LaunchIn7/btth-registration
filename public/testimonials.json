@@ -1,114 +1,92 @@
 [
   {
-    "id": 3,
-    "studentName": "Kushal Tharani",
-    "image": "https://btnavimumbai.com/assets/img/new/KUSHAL_THARANI.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced",
-    "rank": {
-      "jeeAdvanced": "AIR 149",
-      "jeeMains": null,
-      "rawText": "AIR 149"
-    },
-    "rating": 5,
-    "testimonial": "Joining BT has been an amazing journey for me. The teachers, study materials, and support helped me grow and stay focused. I learned how to work hard and stay strong during tough times. BT made my dream possible, and I'm really thankful for everything it has given me.",
-    "displayRanks": "AIR 149",
-    "hasBothRanks": null
+    "id": "pranat-parakh",
+    "type": "student",
+    "name": "Pranat Parakh",
+    "subtitle": "Navi Mumbai Center",
+    "quote": "The quality of tests was top-notch and helped me identify my weak areas!",
+    "videoUrl": "https://youtube.com/shorts/rpn8Uvo55Bs?si=JK8KnN7mRtoA7pZz",
+    "thumbnail": "https://img.youtube.com/vi/rpn8Uvo55Bs/hqdefault.jpg",
+    "badge": "99.7948 %ile",
+    "examLabel": "JEE Mains 2026 – Session 1",
+    "duration": "04:12",
+    "accent": "blue",
+    "enabled": true,
+    "orientation": "portrait"
   },
   {
-    "id": 1,
-    "studentName": "Aditya Biswas",
-    "image": "https://btnavimumbai.com/assets/img/new/ADITYA_BISWAS.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced/JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 751",
-      "jeeMains": "AIR 965",
-      "rawText": "AIR 751/AIR 965"
-    },
-    "rating": 5,
-    "testimonial": "I am very grateful to BT Navi Mumbai for helping me achieve a good rank in JEE Mains & JEE Advanced. The teachers were very hands-on with teaching and doubt clearing, and they were exceptional at making topics easily understandable. The test series also helped me improve my confidence and marks. BT Navi Mumbai had an enormous influence on me getting a good rank in JEE Advanced 2025.",
-    "displayRanks": "AIR 751/AIR 965",
-    "hasBothRanks": "AIR 965"
+    "id": "daksh-jain",
+    "type": "student",
+    "name": "Daksh Jain",
+    "subtitle": "Navi Mumbai Center",
+    "quote": "The mentoring made all the difference in my preparation journey!",
+    "videoUrl": "https://youtube.com/shorts/nWN8-Jzp37w?si=I_v3kfnuYRIaCiMc",
+    "thumbnail": "https://img.youtube.com/vi/nWN8-Jzp37w/hqdefault.jpg",
+    "badge": "99.8869 %ile",
+    "examLabel": "JEE Mains 2026 – Session 1",
+    "duration": "03:45",
+    "accent": "gold",
+    "enabled": true,
+    "orientation": "portrait"
   },
   {
-    "id": 2,
-    "studentName": "Suchir Ravva",
-    "image": "https://btnavimumbai.com/assets/img/new/SUCHIR_RAVVA.png",
-    "imageAlt": "testi",
-    "examType": "JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 929",
-      "jeeMains": "AIR 690",
-      "rawText": "AIR 929 (JEE Advanced) & AIR 690"
-    },
-    "rating": 5,
-    "testimonial": "I am truly thankful to my teachers and the entire Bakliwal Tutorials team. The knowledge they shared, along with their motivation and study tips, truly made a difference in my journey. The regular mock tests at BT were extremely helpful and relevant. They showed me where I stood and helped me boost my exam temperament. The teachers were always ready to help with my doubts, and their support made my success possible.",
-    "displayRanks": "AIR 929 (JEE Advanced) & AIR 690",
-    "hasBothRanks": "AIR 690"
+    "id": "raunak-raj-student",
+    "type": "student",
+    "name": "Raunak Raj",
+    "subtitle": "Navi Mumbai Center",
+    "quote": "BT prepared me for the academic rigors of life at IIT Bombay.",
+    "videoUrl": "https://youtube.com/shorts/hWaZo1bWgP0?si=o5pfwcTApuStejwK",
+    "thumbnail": "https://img.youtube.com/vi/hWaZo1bWgP0/hqdefault.jpg",
+    "badge": "99.7797 %ile",
+    "examLabel": "JEE Mains 2026 – Session 1",
+    "duration": "05:20",
+    "accent": "neutral",
+    "enabled": true,
+    "orientation": "portrait"
   },
   {
-    "id": 4,
-    "studentName": "Jayati Gulati",
-    "image": "https://btnavimumbai.com/assets/img/new/JAYATI_GULATI.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced/JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 2088",
-      "jeeMains": "AIR 2308",
-      "rawText": "AIR 2088/AIR 2308"
-    },
-    "rating": 5,
-    "testimonial": "Bakliwal Tutorials provided me with the right platform for great learning and performance during the JEE examination. Their efficient testing system helped me gauge my preparedness level and identify areas for improvement. The one-on-one doubt-clearing sessions were also a tremendous help. The teachers helped me with complex problems, which ultimately clarified my concepts. I am truly grateful for their unwavering guidance and support.",
-    "displayRanks": "AIR 2088/AIR 2308",
-    "hasBothRanks": "AIR 2308"
+    "id": "raunak-raj-parent",
+    "type": "parent",
+    "name": "Raunak Raj",
+    "subtitle": "Parents Share Their Experience",
+    "quote": "We were kept updated at every step with detailed mock analysis reports.",
+    "videoUrl": "https://youtu.be/KewnLnZRNG0",
+    "thumbnail": "https://i.ytimg.com/vi/KewnLnZRNG0/hqdefault.jpg",
+    "badge": "AIR 1444",
+    "examLabel": "JEE Advanced 2026",
+    "duration": "",
+    "accent": "gold",
+    "enabled": true,
+    "orientation": "landscape"
   },
   {
-    "id": 5,
-    "studentName": "Eshan Bausal",
-    "image": "https://btnavimumbai.com/assets/img/new/ESHAN_BANSAL.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced/JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 2205",
-      "jeeMains": "AIR 2776",
-      "rawText": "AIR 2205/AIR 2776"
-    },
-    "rating": 5,
-    "testimonial": "My name is Eshan Bausal, and I joined BT for the most important year of my prep. From the day I joined, I fell in love with the quality of questions in the BT modules. My teachers were always approachable and never hesitated to explain even my \"silliest of doubts\". The BT Test Series had new and challenging questions that pushed my limits and helped me face the completely new JEE Advanced questions. Overall, I had a great and fulfilling experience at Bakliwal Tutorials.",
-    "displayRanks": "AIR 2205/AIR 2776",
-    "hasBothRanks": "AIR 2776"
+    "id": "param-ravindra-bhaiwal",
+    "type": "parent",
+    "name": "Param Ravindra Bhaiwal",
+    "subtitle": "Parents Share Their Experience",
+    "quote": "The teachers here go out of their way to support the mental well-being of the students.",
+    "videoUrl": "https://youtu.be/3VqwqNfHgxg",
+    "thumbnail": "https://i.ytimg.com/vi/3VqwqNfHgxg/hqdefault.jpg",
+    "badge": "AIR 4038",
+    "examLabel": "JEE Advanced 2026",
+    "duration": "",
+    "accent": "neutral",
+    "enabled": true,
+    "orientation": "landscape"
   },
   {
-    "id": 6,
-    "studentName": "Atin Gupta",
-    "image": "https://btnavimumbai.com/assets/img/new/ATIN_GUPTA.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced/JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 675",
-      "jeeMains": "AIR 517",
-      "rawText": "AIR 675/AIR 517"
-    },
-    "rating": 5,
-    "testimonial": "I am very grateful to my teachers, Girish Sir and Parth Sir, at BT. They provided invaluable advice and guidance throughout my preparation journey. The mock tests at BT were filled with new and challenging questions, helping me with time management. My journey at BT was a very sweet, fruitful, and memorable one.",
-    "displayRanks": "AIR 675/AIR 517",
-    "hasBothRanks": "AIR 517"
-  },
-  {
-    "id": 7,
-    "studentName": "Aditya Mishra",
-    "image": "https://btnavimumbai.com/assets/img/new/ADITYA_MISHRA.png",
-    "imageAlt": "testi",
-    "examType": "JEE Advanced/JEE Mains",
-    "rank": {
-      "jeeAdvanced": "AIR 650",
-      "jeeMains": "AIR 452",
-      "rawText": "AIR 650/AIR 452"
-    },
-    "rating": 5,
-    "testimonial": "I owe a huge part of my success to the faculties at Bakliwal Tutorials. The journey here was fantastic, and their constant support and guidance greatly helped me during my journey to success.",
-    "displayRanks": "AIR 650/AIR 452",
-    "hasBothRanks": "AIR 452"
+    "id": "rekha-agarwal",
+    "type": "parent",
+    "name": "Rekha Agarwal",
+    "subtitle": "Parent of Arman Agarwal",
+    "quote": "Bakliwal Tutorials structured guidance gave our child immense confidence!",
+    "videoUrl": "https://youtu.be/lcwSFMPU8a0",
+    "thumbnail": "https://i.ytimg.com/vi/lcwSFMPU8a0/hqdefault.jpg",
+    "badge": "AIR 608",
+    "examLabel": "JEE Advanced 2026",
+    "duration": "",
+    "accent": "blue",
+    "enabled": true,
+    "orientation": "landscape"
   }
 ]
